@@ -1,6 +1,9 @@
 # Local Codex working directories
 work/
 outputs/
+output/
+.playwright-cli/
+.impeccable/live/sessions/
 
 # Environment and secrets
 .env

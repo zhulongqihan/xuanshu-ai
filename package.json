@@ -1,0 +1,17 @@
+{
+  "name": "xuanshu-ai",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @xuanshu/web dev",
+    "build": "pnpm --filter @xuanshu/web build",
+    "start": "pnpm --filter @xuanshu/web start",
+    "lint": "pnpm --filter @xuanshu/web lint",
+    "typecheck": "pnpm --filter @xuanshu/web typecheck",
+    "check": "pnpm lint && pnpm typecheck && pnpm build"
+  }
+}

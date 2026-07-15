@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-15T23:30:00+08:00",
+  "title": "Design System: 玄枢 AI",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "清空钴蓝",
+        "canonical": "oklch(0.52 0.12 230)",
+        "tonalRamp": ["oklch(0.15 0.05 230)", "oklch(0.25 0.08 230)", "oklch(0.35 0.1 230)", "oklch(0.46 0.13 230)", "oklch(0.58 0.11 230)", "oklch(0.72 0.08 230)", "oklch(0.86 0.05 230)", "oklch(0.95 0.02 230)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "清晰工作面",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": ["oklch(0.15 0 0)", "oklch(0.28 0 0)", "oklch(0.42 0 0)", "oklch(0.56 0 0)", "oklch(0.7 0 0)", "oklch(0.82 0 0)", "oklch(0.92 0 0)", "oklch(1 0 0)"]
+      },
+      "success-ink": {
+        "role": "semantic",
+        "displayName": "本地状态文字",
+        "canonical": "oklch(0.34 0.09 155)",
+        "tonalRamp": ["oklch(0.15 0.04 155)", "oklch(0.25 0.07 155)", "oklch(0.34 0.09 155)", "oklch(0.46 0.1 155)", "oklch(0.58 0.09 155)", "oklch(0.7 0.07 155)", "oklch(0.84 0.05 155)", "oklch(0.94 0.025 155)"]
+      },
+      "success-soft": {
+        "role": "semantic",
+        "displayName": "本地状态底色",
+        "canonical": "oklch(0.92 0.045 155)",
+        "tonalRamp": ["oklch(0.15 0.025 155)", "oklch(0.28 0.03 155)", "oklch(0.42 0.035 155)", "oklch(0.56 0.04 155)", "oklch(0.7 0.043 155)", "oklch(0.82 0.045 155)", "oklch(0.92 0.045 155)", "oklch(0.97 0.02 155)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "页面标题", "purpose": "当前工作区的一级标题。" },
+      "body": { "displayName": "中文正文", "purpose": "解释、状态和表单内容。" }
+    },
+    "shadows": [
+      { "name": "floating", "value": "0 4px 8px oklch(0.22 0.025 245 / 0.14)", "purpose": "仅用于菜单和对话框。" }
+    ],
+    "motion": [
+      { "name": "state-out", "value": "160ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "悬停、选中和焦点状态。" }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "680px" },
+      { "name": "compact", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "每个任务区唯一的主要命令。",
+      "html": "<button class=\"ds-btn-primary\">新建档案</button>",
+      "css": ".ds-btn-primary{height:38px;border:0;border-radius:8px;padding:0 15px;background:var(--primary);color:white;font:600 13px sans-serif}.ds-btn-primary:hover{background:var(--primary-hover)}.ds-btn-primary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "description": "侧栏和移动导航的统一选中状态。",
+      "html": "<a class=\"ds-nav-item\" href=\"#\">今日</a>",
+      "css": ".ds-nav-item{display:flex;align-items:center;min-height:42px;padding:0 11px;border-radius:8px;background:var(--primary-soft);color:var(--primary-hover);font:680 14px sans-serif}.ds-nav-item:focus-visible{outline:3px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Workspace Panel",
+      "kind": "card",
+      "refersTo": "workspace-panel",
+      "description": "真正需要边界的独立工作区。",
+      "html": "<section class=\"ds-panel\"><h2>四术状态</h2></section>",
+      "css": ".ds-panel{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:18px}.ds-panel h2{margin:0;font:680 16px/1.3 sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "清晨案头的星历工作台",
+    "overview": "时间、盘面、证据和咨询各有位置；传统文化感由内容而非装饰承担。",
+    "keyCharacteristics": ["清晰的时间与证据层级", "高密度但稳定的研究布局", "本地、私密、可信的状态表达", "稀少而有意义的颜色和动效"],
+    "rules": [
+      { "name": "The Clear Sky Rule", "body": "主色在单个屏幕不超过约 10%。", "section": "colors" },
+      { "name": "The Flat-by-Default Rule", "body": "没有脱离文档流，就没有阴影。", "section": "elevation" }
+    ],
+    "dos": ["让首页直接呈现真实任务。", "保持盘面、证据和解释之间可视化对应关系。"],
+    "donts": ["不使用黑底金字和仿古纹理。", "不嵌套卡片或使用宽模糊阴影。"]
+  }
+}
