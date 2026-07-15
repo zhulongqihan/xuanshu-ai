@@ -11,7 +11,11 @@
     "build": "pnpm --filter @xuanshu/web build",
     "start": "pnpm --filter @xuanshu/web start",
     "lint": "pnpm --filter @xuanshu/web lint",
-    "typecheck": "pnpm --filter @xuanshu/web typecheck",
-    "check": "pnpm lint && pnpm typecheck && pnpm build"
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }

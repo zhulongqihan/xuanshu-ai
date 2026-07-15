@@ -1,0 +1,12 @@
+config_version = 1
+
+[provider]
+type = "openai-compatible"
+base_url = "https://api.openai.com/v1"
+api_mode = "responses"
+model = "gpt-5.6"
+reasoning_effort = "medium"
+api_key_env = "XUANSHU_AI_API_KEY"
+store = false
+timeout_ms = 120000
+max_retries = 2
