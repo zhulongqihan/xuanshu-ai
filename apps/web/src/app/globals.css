@@ -553,6 +553,10 @@ button:disabled {
   color: var(--primary);
 }
 
+.settings-row > div {
+  min-width: 0;
+}
+
 .settings-row h2 {
   margin: 0;
   font-size: 14px;
@@ -562,6 +566,7 @@ button:disabled {
   margin: 4px 0 0;
   color: var(--ink-muted);
   font-size: 12px;
+  overflow-wrap: anywhere;
   text-wrap: pretty;
 }
 

@@ -20,3 +20,4 @@ await copyIfPresent(
   join(standaloneApp, ".next", "static"),
 );
 await copyIfPresent(join(appRoot, "public"), join(standaloneApp, "public"));
+await copyIfPresent(join(appRoot, "drizzle"), join(standaloneApp, "drizzle"));

@@ -1,9 +1,18 @@
 import { KeyRound, Laptop, ShieldCheck } from "lucide-react";
+import { loadAppConfig } from "@xuanshu/agent";
+import { connection } from "next/server";
 import { PageHeader } from "@/components/page-header";
+import { readDatabaseStatus } from "@/server/db";
 
 export const metadata = { title: "设置" };
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  await connection();
+  const [database, modelConfig] = await Promise.all([
+    readDatabaseStatus(),
+    loadAppConfig(),
+  ]);
+
   return (
     <div className="page-frame">
       <PageHeader
@@ -16,7 +25,7 @@ export default function SettingsPage() {
           <Laptop aria-hidden="true" size={21} strokeWidth={1.7} />
           <div>
             <h2>本地数据</h2>
-            <p>当前设备 · 尚未初始化数据库</p>
+            <p>{database.path}</p>
           </div>
           <span className="status-badge">本地</span>
         </section>
@@ -24,7 +33,11 @@ export default function SettingsPage() {
           <KeyRound aria-hidden="true" size={21} strokeWidth={1.7} />
           <div>
             <h2>模型提供商</h2>
-            <p>尚未配置</p>
+            <p>
+              {modelConfig.source === "file"
+                ? `${modelConfig.config.provider.model} · ${modelConfig.config.provider.api_mode}`
+                : `默认配置 · ${modelConfig.config.provider.model}`}
+            </p>
           </div>
           <button className="secondary-button" type="button" disabled>
             配置
