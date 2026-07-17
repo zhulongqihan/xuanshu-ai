@@ -11,8 +11,9 @@
 
 ## 当前阶段
 
-项目已完成基础规划和首个本地 Web 应用壳，正在建设模型配置、SQLite 数据层与确定性
-历法基座。当前架构、规则边界、资料来源和质量门槛已经形成可追溯文档。
+项目已完成 M0，并已具备 M1 的本地 Web 应用壳、模型配置契约、SQLite 数据层、健康检查、
+Windows 启动器和基础 CI。M1 的桌面端与移动端 Playwright 验收仍待完成；M2 将开始建设
+确定性历法基座和人物档案。当前架构、规则边界、资料来源和质量门槛已经形成可追溯文档。
 
 ## 本地运行
 
@@ -30,6 +31,18 @@ pnpm check
 ```
 
 当前应用只包含可验证的工作区与状态，不会显示尚未实现的虚构命理结果。
+
+### Windows 桌面快捷方式
+
+在仓库根目录运行一次：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1
+```
+
+桌面上的“玄枢 AI”快捷方式会在需要时安装依赖并重新构建，然后在后台启动仅监听
+`127.0.0.1` 的服务并打开浏览器。运行日志默认保存在 `%LOCALAPPDATA%\XuanshuAI\logs`；
+设置 `XUANSHU_AI_DATA_DIR` 后，数据库和日志会统一写入该目录。
 
 ## 项目文档
 
