@@ -41,6 +41,16 @@ describe("app data paths", () => {
       }),
     ).toBe("D:\\Private\\Xuanshu");
   });
+
+  it("uses XDG_DATA_HOME with POSIX separators on Linux", () => {
+    expect(
+      getAppDataDirectory({
+        platform: "linux",
+        homeDirectory: "/home/demo",
+        environment: { XDG_DATA_HOME: "/var/lib/demo" },
+      }),
+    ).toBe("/var/lib/demo/XuanshuAI");
+  });
 });
 
 describe("database migrations", () => {
