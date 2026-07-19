@@ -539,4 +539,7 @@ export type NormalizedBirth = z.infer<typeof normalizedBirthSchema>;
 export type CalendarResolution = z.infer<typeof calendarResolutionSchema>;
 export type TimeResolution = z.infer<typeof timeResolutionSchema>;
 export type CivilTimeCandidate = z.infer<typeof civilTimeCandidateSchema>;
+export type ApparentSolarTime = z.infer<typeof apparentSolarTimeSchema>;
+export type SolarTermContext = z.infer<typeof solarTermContextSchema>;
+export type BoundaryDistance = z.infer<typeof boundaryDistanceSchema>;
 export type NormalizationWarning = z.infer<typeof normalizationWarningSchema>;

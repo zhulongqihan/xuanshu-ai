@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "0.5.1",
+    "astronomia": "4.2.0",
     "canonicalize": "3.0.0",
     "lunar-typescript": "1.8.6",
     "zod": "^4.4.3"

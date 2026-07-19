@@ -19,6 +19,7 @@
 | `hko-calendar` | S0 | [香港天文台公农历对照表](https://www.hko.gov.hk/en/gts/time/conversion.htm) | 1901-2100 公农历与节气回归基准 |
 | `hko-calendar-api` | S0 | [香港天文台开放数据目录](https://data.gov.hk/en-data/dataset/hk-hko-rss-gregorian-lunar-calendar-conversion-table)；[按日期 JSON API](https://data.weather.gov.hk/weatherAPI/opendata/lunardate.php?date=[YYYY-MM-DD]) | 生成和抽样复核公农历 fixture；不作为运行时依赖 |
 | `iana-tzdb` | S0 | [IANA Time Zone Database](https://www.iana.org/time-zones) | 历史民用时区、UTC 偏移和夏令时 |
+| `rfc-8785` | S0 | [RFC 8785 JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785) | 出生输入稳定序列化与 SHA-256 复算 |
 | `gbt-33661` | S0 | GB/T 33661-2017《农历的编算和颁行》 | 农历术语、编算与发布边界 |
 | `meeus-aa` | S0 | Jean Meeus, *Astronomical Algorithms* | 儒略日、太阳视黄经和时间方程交叉验证 |
 | `yuanhai-ziping` | S1 | 《渊海子平》 | 子平法基础规则 |
