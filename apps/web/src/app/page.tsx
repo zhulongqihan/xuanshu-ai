@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { connection } from "next/server";
 import { PageHeader } from "@/components/page-header";
+import { listStoredProfiles } from "@/server/profiles";
 
 const workbenchItems = [
   {
@@ -47,6 +48,12 @@ const systems = [
 export default async function Home() {
   await connection();
   const now = new Date();
+  let profileCount = 0;
+  try {
+    profileCount = listStoredProfiles().length;
+  } catch {
+    // The health and settings surfaces expose database failures in detail.
+  }
   const dateLabel = new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
@@ -66,7 +73,7 @@ export default async function Home() {
         </div>
         <div>
           <span className="today-band-label">人物档案</span>
-          <strong>尚未建立</strong>
+          <strong>{profileCount > 0 ? `${profileCount} 个档案` : "尚未建立"}</strong>
         </div>
         <div>
           <span className="today-band-label">模型</span>
