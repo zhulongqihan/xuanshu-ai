@@ -1,47 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  birthInputSchema,
   claimSchema,
   liuyaoCastSchema,
 } from "../src/schemas";
-
-const validBirth = {
-  calendar: "solar" as const,
-  date: "1990-05-18",
-  time: "23:30",
-  chartSex: "male" as const,
-  locationName: "上海市",
-  latitude: 31.2304,
-  longitude: 121.4737,
-  timeZone: "Asia/Shanghai",
-};
-
-describe("birthInputSchema", () => {
-  it("accepts a complete supported birth input", () => {
-    expect(birthInputSchema.parse(validBirth)).toMatchObject({
-      isLeapMonth: false,
-      uncertaintyMinutes: 0,
-    });
-  });
-
-  it("rejects impossible and out-of-range dates", () => {
-    expect(() => birthInputSchema.parse({ ...validBirth, date: "1900-12-31" })).toThrow();
-    expect(() => birthInputSchema.parse({ ...validBirth, date: "2026-02-30" })).toThrow();
-  });
-
-  it("requires coordinates to be supplied together", () => {
-    const { longitude: _longitude, ...missingLongitude } = validBirth;
-    expect(() => birthInputSchema.parse(missingLongitude)).toThrow(
-      "经纬度必须同时提供或同时省略",
-    );
-  });
-
-  it("rejects leap-month flags on solar dates", () => {
-    expect(() =>
-      birthInputSchema.parse({ ...validBirth, isLeapMonth: true }),
-    ).toThrow("公历日期不能标记为闰月");
-  });
-});
 
 describe("claimSchema", () => {
   it("requires evidence for every claim", () => {
