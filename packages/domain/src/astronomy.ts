@@ -1,3 +1,5 @@
+/// <reference path="./astronomia.d.ts" />
+
 import { Temporal } from "@js-temporal/polyfill";
 import earthData from "astronomia/data/vsop87Bearth";
 import { e as equationOfTime } from "astronomia/eqtime";

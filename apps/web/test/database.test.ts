@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -104,5 +104,137 @@ describe("database migrations", () => {
       expect(sqlite.prepare(`SELECT COUNT(*) FROM ${table}`).pluck().get()).toBe(0);
     }
     sqlite.close();
+  });
+
+  it("upgrades a populated M1 database without losing linked records", async () => {
+    const directory = await createTemporaryDirectory();
+    const legacyMigrations = join(directory, "legacy-migrations");
+    await mkdir(join(legacyMigrations, "meta"), { recursive: true });
+    await copyFile(
+      join(process.cwd(), "drizzle", "0000_narrow_baron_zemo.sql"),
+      join(legacyMigrations, "0000_narrow_baron_zemo.sql"),
+    );
+    await writeFile(
+      join(legacyMigrations, "meta", "_journal.json"),
+      JSON.stringify({
+        version: "7",
+        dialect: "sqlite",
+        entries: [
+          {
+            idx: 0,
+            version: "6",
+            when: 1_784_130_366_817,
+            tag: "0000_narrow_baron_zemo",
+            breakpoints: true,
+          },
+        ],
+      }),
+      "utf8",
+    );
+
+    const legacy = initializeDatabase({
+      directory,
+      migrationsFolder: legacyMigrations,
+    });
+    const now = "2026-07-19T22:00:00+08:00";
+    legacy.sqlite
+      .prepare(
+        `INSERT INTO profiles (
+          id, display_name, calendar_type, birth_date, birth_time, chart_sex,
+          location_name, time_zone, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "legacy-profile",
+        "旧档案",
+        "solar",
+        "1990-05-18",
+        "23:30",
+        "male",
+        "上海市",
+        "Asia/Shanghai",
+        now,
+        now,
+      );
+    legacy.sqlite
+      .prepare(
+        `INSERT INTO chart_snapshots (
+          id, profile_id, system, input_hash, engine_version, rule_set_id,
+          rule_set_version, payload_json, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "legacy-chart",
+        "legacy-profile",
+        "bazi",
+        "a".repeat(64),
+        "0.1.0",
+        "bazi-ziping-v1",
+        "1.0.0",
+        "{}",
+        now,
+      );
+    legacy.sqlite
+      .prepare(
+        `INSERT INTO liuyao_cases (
+          id, profile_id, question, method, lines_json, cast_at, time_zone,
+          location_name, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "legacy-liuyao",
+        "legacy-profile",
+        "旧问题",
+        "manual_lines",
+        "[7,8,7,8,7,8]",
+        now,
+        "Asia/Shanghai",
+        "上海市",
+        now,
+      );
+    legacy.sqlite.close();
+
+    const upgraded = initializeDatabase({
+      directory,
+      migrationsFolder: join(process.cwd(), "drizzle"),
+    });
+    expect(
+      upgraded.sqlite.prepare("SELECT COUNT(*) FROM profile_birth_records").pluck().get(),
+    ).toBe(0);
+    expect(
+      upgraded.sqlite
+        .prepare("SELECT birth_record_id FROM chart_snapshots WHERE id = ?")
+        .pluck()
+        .get("legacy-chart"),
+    ).toBeNull();
+    expect(
+      upgraded.sqlite.prepare("SELECT question FROM liuyao_cases WHERE id = ?").pluck().get(
+        "legacy-liuyao",
+      ),
+    ).toBe("旧问题");
+
+    const chartForeignKeys = upgraded.sqlite.pragma("foreign_key_list('chart_snapshots')") as Array<{
+      from: string;
+      on_delete: string;
+    }>;
+    expect(chartForeignKeys).toContainEqual(
+      expect.objectContaining({ from: "birth_record_id", on_delete: "CASCADE" }),
+    );
+    const liuyaoForeignKeys = upgraded.sqlite.pragma("foreign_key_list('liuyao_cases')") as Array<{
+      from: string;
+      on_delete: string;
+    }>;
+    expect(liuyaoForeignKeys).toContainEqual(
+      expect.objectContaining({ from: "profile_id", on_delete: "CASCADE" }),
+    );
+
+    upgraded.sqlite.prepare("DELETE FROM profiles WHERE id = ?").run("legacy-profile");
+    expect(
+      upgraded.sqlite.prepare("SELECT COUNT(*) FROM chart_snapshots").pluck().get(),
+    ).toBe(0);
+    expect(
+      upgraded.sqlite.prepare("SELECT COUNT(*) FROM liuyao_cases").pluck().get(),
+    ).toBe(0);
+    upgraded.sqlite.close();
   });
 });

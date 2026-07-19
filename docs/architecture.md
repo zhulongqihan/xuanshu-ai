@@ -41,6 +41,10 @@
 - 密钥只从配置指定的环境变量或 Windows 凭据管理器读取。
 - Windows 启动器负责检测服务、启动应用并打开浏览器；安装脚本创建桌面快捷方式。
 - 开源用户同时可以通过 pnpm 和可选 Docker 配置运行应用。
+- `profile_birth_records` 是出生资料的权威不可变版本表，同时保存 raw、canonical、normalized、
+  输入哈希、依赖版本、来源和警告；`profiles` 只承担档案身份及 M1 兼容镜像。
+- 出生资料修正必须新增 revision 并原子切换 current，旧命盘通过 `birth_record_id` 继续引用
+  原版本。读取时重新校验 schema、normalizer 版本和 SHA-256，不把合法 JSON 直接视为可信。
 
 模型配置的首版契约如下：
 
