@@ -43,6 +43,7 @@
 | `astronomia` | 4.2.0 | MIT | Meeus 天文算法实现；用于真太阳时和天文交叉验证 |
 | `tz-lookup` | 6.1.25 | CC0-1.0 | 不采用：npm 指向的上游仓库不可用；首版要求用户确认 IANA 时区 |
 | `@js-temporal/polyfill` | 0.5.1 | ISC | 明确处理日期、时间、时区和歧义时刻 |
+| `canonicalize` | 3.0.0 | Apache-2.0 | 按 RFC 8785 生成稳定 JSON，作为出生输入 SHA-256 的唯一序列化格式 |
 | `openai` | 6.46.0 | Apache-2.0 | Responses API 与 OpenAI 兼容端点调用 |
 
 依赖版本只表示 2026-07-19 的研究基线。实现时使用锁文件固定实际版本，升级必须经过

@@ -11,9 +11,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@js-temporal/polyfill": "0.5.1",
+    "canonicalize": "3.0.0",
+    "lunar-typescript": "1.8.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/node": "^24.13.3",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   }

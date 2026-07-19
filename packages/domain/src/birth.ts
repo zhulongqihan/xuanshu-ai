@@ -536,5 +536,7 @@ export type RawBirthInput = z.infer<typeof rawBirthInputSchema>;
 export type CanonicalBirthInput = z.infer<typeof canonicalBirthInputSchema>;
 export type BirthInput = RawBirthInput;
 export type NormalizedBirth = z.infer<typeof normalizedBirthSchema>;
+export type CalendarResolution = z.infer<typeof calendarResolutionSchema>;
+export type TimeResolution = z.infer<typeof timeResolutionSchema>;
 export type CivilTimeCandidate = z.infer<typeof civilTimeCandidateSchema>;
 export type NormalizationWarning = z.infer<typeof normalizationWarningSchema>;
