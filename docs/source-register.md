@@ -1,7 +1,7 @@
 # 资料来源注册表
 
-状态：初始基线
-更新日期：2026-07-13
+状态：持续维护
+更新日期：2026-07-19
 
 ## 来源等级
 
@@ -17,6 +17,7 @@
 | ID | 等级 | 来源 | 计划用途 |
 | --- | --- | --- | --- |
 | `hko-calendar` | S0 | [香港天文台公农历对照表](https://www.hko.gov.hk/en/gts/time/conversion.htm) | 1901-2100 公农历与节气回归基准 |
+| `hko-calendar-api` | S0 | [香港天文台开放数据目录](https://data.gov.hk/en-data/dataset/hk-hko-rss-gregorian-lunar-calendar-conversion-table)；[按日期 JSON API](https://data.weather.gov.hk/weatherAPI/opendata/lunardate.php?date=[YYYY-MM-DD]) | 生成和抽样复核公农历 fixture；不作为运行时依赖 |
 | `iana-tzdb` | S0 | [IANA Time Zone Database](https://www.iana.org/time-zones) | 历史民用时区、UTC 偏移和夏令时 |
 | `gbt-33661` | S0 | GB/T 33661-2017《农历的编算和颁行》 | 农历术语、编算与发布边界 |
 | `meeus-aa` | S0 | Jean Meeus, *Astronomical Algorithms* | 儒略日、太阳视黄经和时间方程交叉验证 |
@@ -33,18 +34,18 @@
 古籍初始电子文本可从维基文库检索。正式引用时必须记录具体版本、卷次和章节，
 不能只记录搜索页面或作品名。
 
-## 候选开源依赖
+## 开源依赖决策
 
 | 包 | 当前核验版本 | 许可证 | 使用约束 |
 | --- | --- | --- | --- |
-| `lunar-typescript` | 1.8.6 | MIT | 历法、干支、八字和黄历候选计算；必须通过独立回归集 |
+| `lunar-typescript` | 1.8.6 | MIT | 公农历、干支和节气候选计算；不直接采用其宜忌或解释，必须通过独立回归集 |
 | `iztro` | 2.5.8 | MIT | 紫微候选排盘；固定配置并记录四化、亮度和插件版本 |
 | `astronomia` | 4.2.0 | MIT | Meeus 天文算法实现；用于真太阳时和天文交叉验证 |
-| `tz-lookup` | 6.1.25 | CC0-1.0 | 经纬度到 IANA 时区候选映射；结果允许人工修正 |
+| `tz-lookup` | 6.1.25 | CC0-1.0 | 不采用：npm 指向的上游仓库不可用；首版要求用户确认 IANA 时区 |
 | `@js-temporal/polyfill` | 0.5.1 | ISC | 明确处理日期、时间、时区和歧义时刻 |
 | `openai` | 6.46.0 | Apache-2.0 | Responses API 与 OpenAI 兼容端点调用 |
 
-依赖版本只表示 2026-07-13 的研究基线。实现时使用锁文件固定实际版本，升级必须经过
+依赖版本只表示 2026-07-19 的研究基线。实现时使用锁文件固定实际版本，升级必须经过
 许可证核验、变更审查和全部黄金测试。
 
 ## OpenAI 官方资料
