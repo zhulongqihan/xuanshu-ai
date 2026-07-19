@@ -19,6 +19,21 @@ M2 将“民用时间归一化”“公农历转换”“节气候选”和“�
 | 太阳位置、均时差 | `astronomia` | 4.2.0 / MIT | 只封装所需 Meeus 算法；记录算法版本和输入时间尺度；独立样例校验 |
 | IANA 时区数据 | Node.js ICU/tzdb | 随 Node 24 发行 | 记录 `process.versions.node`、`process.versions.icu` 和可用的 `process.versions.tz`；升级 Node 必须重跑时区黄金集 |
 
+### 已知适配器约束
+
+- `lunar-typescript` 的 `Solar` 是无时区的年月日时分秒对象，`fromDate()` 会读取宿主本地字段，
+  部分历法计算采用东八区口径。适配器只能接收显式日期字段，禁止把任意地区的 JavaScript
+  `Date` 直接传入。任意 IANA 时区的 civil time 必须先由 Temporal 层解析。
+- `@js-temporal/polyfill` 不内置冻结的 tzdb，而是依赖宿主 `Intl`/ICU；即使业务依赖版本不变，
+  Node/ICU/tzdb 变化仍可能改变历史 offset，因此运行时指纹是复算契约的一部分。
+- `astronomia` 使用 JD/JDE、UT/TD、弧度等天文原语；`AstronomyPort` 必须在类型和 trace 中
+  标明时间尺度与单位。快速节气算法不能用于整个 1901–2100 正式区间，正式计算需使用其
+  高精度 VSOP87 路径并以独立资料校验。
+- npm 发布的 `lunar-typescript@1.8.6` `gitHead` 为 `a376ec2...`，GitHub `v1.8.6` 标签为
+  `0f3e95d...`。锁文件必须固定 npm integrity，并以实际 npm 构件为被测对象，不能用标签源码
+  替代发布物。当前 npm integrity 为
+  `sha512-5Eo4T/cnuXfrgO4k5LCpOGHIUOuz5hCF/IfNv0T29WY2shR36Hiz+ecN9WjnUuxUKhql9gbOkPaQoqLFKtPRNA==`。
+
 ### 明确不采用
 
 - `@lunisolar/core`：截至本决策日期 npm 不存在该包。
