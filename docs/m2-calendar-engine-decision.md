@@ -1,29 +1,35 @@
 # M2 历法基座依赖与边界决策
 
 状态：已采纳
-更新日期：2026-07-19
+更新日期：2026-07-21
 
 ## 决策摘要
 
 M2 将“民用时间归一化”“公农历转换”“节气候选”和“真太阳时校正”拆成可替换适配器。
-第三方库只产生中间候选值；面向用户的 `NormalizedBirth` 必须由玄枢自己的版本化契约包装，
-并记录依赖版本、运行时 ICU/tzdb 版本、输入哈希、规则来源和警告。任何库的默认黄历、八字
-或吉凶解释都不会直接成为产品规则。
+1901–2100 公农历转换由香港天文台逐日数据派生的离线月界表直接驱动，第三方库只作为交叉
+验证和后续干支候选；面向用户的 `NormalizedBirth` 由玄枢自己的版本化契约包装，并记录
+依赖版本、运行时 ICU/tzdb 版本、输入哈希、规则来源和警告。任何库的默认黄历、八字或
+吉凶解释都不会直接成为产品规则。
 
 ## 依赖选择
 
 | 能力 | 锁定候选 | 版本/许可证 | 使用边界 |
 | --- | --- | --- | --- |
 | 民用日期、时间、IANA 时区与 DST | `@js-temporal/polyfill` | 0.5.1 / ISC | 使用 `Temporal.ZonedDateTime` 显式处理 gap/overlap；不使用宿主 `Date` 拼接本地时间 |
-| 公历/农历转换与节气候选 | `lunar-typescript` | 1.8.6 / MIT | 只调用日期转换、干支和节气 API；通过 HKO 黄金样例复核；不直接信任其宜忌和解释 |
+| 公历/农历转换 | HKO 离线月界表 | 数据版本 1.0.0 / 香港政府开放数据 | 正式区间逐日双向对照；运行时不联网；生成物、年度原表与例外证据均固定 SHA-256 |
+| 干支与节气候选交叉验证 | `lunar-typescript` | 1.8.6 / MIT | 不再作为正式公农历转换结果；不直接采用其宜忌和解释 |
 | 太阳位置、均时差 | `astronomia` | 4.2.0 / MIT | 只封装所需 Meeus 算法；记录算法版本和输入时间尺度；独立样例校验 |
 | IANA 时区数据 | Node.js ICU/tzdb | 随 Node 24 发行 | 记录 `process.versions.node`、`process.versions.icu` 和可用的 `process.versions.tz`；升级 Node 必须重跑时区黄金集 |
 
 ### 已知适配器约束
 
-- `lunar-typescript` 的 `Solar` 是无时区的年月日时分秒对象，`fromDate()` 会读取宿主本地字段，
-  部分历法计算采用东八区口径。适配器只能接收显式日期字段，禁止把任意地区的 JavaScript
-  `Date` 直接传入。任意 IANA 时区的 civil time 必须先由 Temporal 层解析。
+- `lunar-typescript@1.8.6` 在 `2057-09-28` 至 `2057-10-27` 与 HKO 相差一天，因此不能作为
+  正式公农历转换适配器。后续只允许用显式日期字段生成干支或节气候选，禁止把任意地区的
+  JavaScript `Date` 直接传入；任意 IANA 时区的 civil time 必须先由 Temporal 层解析。
+- HKO `T2069e.txt` 漏列 `2069-12-30`。同年官方 PDF 第 1 页 December 行明确该日为农历
+  十一月十七；生成器只允许这一条带 PDF SHA-256 的显式补丁，其他缺行或格式漂移一律失败。
+- HKO 正式区间在 `2100-12-31` 截断，无法由下一月界观察终端十二月大小。运行时记录采用
+  `lunar-typescript@1.8.6` 交叉值 29 日；所有落在 2101 年的转换仍返回 `unsupported_range`。
 - `@js-temporal/polyfill` 不内置冻结的 tzdb，而是依赖宿主 `Intl`/ICU；即使业务依赖版本不变，
   Node/ICU/tzdb 变化仍可能改变历史 offset，因此运行时指纹是复算契约的一部分。
 - `astronomia` 使用 JD/JDE、UT/TD、弧度等天文原语；`AstronomyPort` 必须在类型和 trace 中
@@ -62,6 +68,9 @@ M2 将“民用时间归一化”“公农历转换”“节气候选”和“�
 
 - 香港天文台转换页：<https://www.hko.gov.hk/en/gts/time/conversion.htm>
   明确提供 1901–2100 年公历与农历对照表。
+- 香港天文台年度文本与 PDF：
+  `https://www.hko.gov.hk/en/gts/time/calendar/text/files/T{year}e.txt` 与
+  `https://www.hko.gov.hk/en/gts/time/calendar/pdf/files/{year}e.pdf`。
 - 香港天文台开放数据目录：<https://data.gov.hk/en-data/dataset/hk-hko-rss-gregorian-lunar-calendar-conversion-table>
 - HKO 按日期 JSON API：<https://data.weather.gov.hk/weatherAPI/opendata/lunardate.php?date=[YYYY-MM-DD]>
   例如 `2024-02-10` 返回甲辰年正月初一。只用于生成/复核 fixture，不作为运行时依赖。
@@ -71,6 +80,10 @@ M2 将“民用时间归一化”“公农历转换”“节气候选”和“�
 - lunar-typescript：<https://github.com/6tail/lunar-typescript>
 - astronomia：<https://github.com/commenthol/astronomia>
 
+离线验证产物位于 `packages/domain/test/fixtures/`，运行时月界表位于
+`packages/domain/src/data/hko-calendar-months.json`。生成器会验证 73,049 个连续公历日、
+农历日递增、29/30 日月长、月序和闰月重复规则，并在 manifest 中记录 200 个年度文本哈希。
+
 ## M2 验收门槛
 
 - 1901–2100 的公农历转换 fixture 可复算，关键边界与 HKO 对照；在线服务不可用时测试仍通过。
@@ -78,3 +91,5 @@ M2 将“民用时间归一化”“公农历转换”“节气候选”和“�
 - 真太阳时保留民用主结果，并输出经度修正、均时差、算法版本和不确定性。
 - 同一 canonical 输入跨 Windows/Ubuntu、进程重启和对象键顺序变化产生相同 SHA-256。
 - 所有 normalized 字段可由 raw input、规则版本、依赖版本和来源重新计算；失败不得留下半档案。
+
+上述门槛的最终验收结果单独记录在 `docs/m2-acceptance.md`；在双平台 CI 通过前不提前关闭 M2。

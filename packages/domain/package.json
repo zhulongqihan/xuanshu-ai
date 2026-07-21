@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "fixture:hko": "node scripts/generate-hko-calendar-fixture.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

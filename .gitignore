@@ -1,5 +1,6 @@
 # Local Codex working directories
 work/
+tmp/
 outputs/
 output/
 .playwright-cli/

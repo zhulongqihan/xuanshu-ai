@@ -1,14 +1,12 @@
 import { createHash } from "node:crypto";
 import { Temporal } from "@js-temporal/polyfill";
 import canonicalize from "canonicalize";
-import { Lunar, LunarYear, Solar } from "lunar-typescript";
 import {
   calendarDateSchema,
   calendarResolutionSchema,
   canonicalBirthInputSchema,
   normalizedBirthSchema,
   rawBirthInputSchema,
-  supportedSolarDateSchema,
   timeResolutionSchema,
   type CalendarResolution,
   type CanonicalBirthInput,
@@ -18,13 +16,14 @@ import {
   type RawBirthInput,
   type TimeResolution,
 } from "./birth";
+import { resolveHkoCalendarDate } from "./hko-calendar";
 import {
   calculateBoundaryDistances,
   resolveApparentSolarTime,
   resolveSolarTermContext,
 } from "./astronomy";
 
-export const NORMALIZER_VERSION = "0.2.0";
+export const NORMALIZER_VERSION = "0.3.0";
 
 export const NORMALIZATION_DEPENDENCIES = [
   {
@@ -45,27 +44,8 @@ export const NORMALIZATION_DEPENDENCIES = [
     integrity:
       "sha512-yYLfHyDMIXRyRqsKBRLX023riFLpXY2YOfdtqKXZRZy9qsfOJ9U+4F9YZL7MEzL5+ziN2x2nlBvY/Voi3EBljA==",
   },
-  {
-    name: "lunar-typescript",
-    version: "1.8.6",
-    integrity:
-      "sha512-5Eo4T/cnuXfrgO4k5LCpOGHIUOuz5hCF/IfNv0T29WY2shR36Hiz+ecN9WjnUuxUKhql9gbOkPaQoqLFKtPRNA==",
-  },
 ] as const;
-
-export type BirthNormalizationErrorCode =
-  | "invalid_lunar_date"
-  | "unsupported_range";
-
-export class BirthNormalizationError extends Error {
-  readonly code: BirthNormalizationErrorCode;
-
-  constructor(code: BirthNormalizationErrorCode, message: string) {
-    super(message);
-    this.name = "BirthNormalizationError";
-    this.code = code;
-  }
-}
+export { BirthNormalizationError } from "./errors";
 
 function normalizeSignedZero(value: number) {
   return Object.is(value, -0) ? 0 : value;
@@ -109,89 +89,10 @@ export function hashCanonicalBirthInput(input: CanonicalBirthInput) {
   return createHash("sha256").update(canonicalBirthJson(input), "utf8").digest("hex");
 }
 
-function lunarFields(lunar: Lunar) {
-  return {
-    kind: "lunar" as const,
-    year: lunar.getYear(),
-    month: Math.abs(lunar.getMonth()),
-    day: lunar.getDay(),
-    isLeapMonth: lunar.getMonth() < 0,
-  };
-}
-
-function assertSupportedSolarDate(solarDate: string) {
-  if (!supportedSolarDateSchema.safeParse(solarDate).success) {
-    throw new BirthNormalizationError(
-      "unsupported_range",
-      `转换后的公历日期超出 1901-01-01 至 2100-12-31：${solarDate}`,
-    );
-  }
-}
-
 export function resolveCalendarDate(
   input: CanonicalBirthInput["calendarDate"],
 ): CalendarResolution {
-  const calendarDate = calendarDateSchema.parse(input);
-  let solar: Solar;
-  let lunar: Lunar;
-
-  if (calendarDate.kind === "solar") {
-    const [year, month, day] = calendarDate.date.split("-").map(Number);
-    solar = Solar.fromYmd(year, month, day);
-    lunar = solar.getLunar();
-  } else {
-    const encodedMonth = calendarDate.isLeapMonth
-      ? -calendarDate.month
-      : calendarDate.month;
-    try {
-      lunar = Lunar.fromYmd(calendarDate.year, encodedMonth, calendarDate.day);
-      solar = lunar.getSolar();
-    } catch (error) {
-      throw new BirthNormalizationError(
-        "invalid_lunar_date",
-        `农历日期不存在：${calendarDate.year} 年${calendarDate.isLeapMonth ? "闰" : ""}${calendarDate.month} 月 ${calendarDate.day} 日`,
-      );
-    }
-
-    const roundTrip = lunarFields(solar.getLunar());
-    if (
-      roundTrip.year !== calendarDate.year ||
-      roundTrip.month !== calendarDate.month ||
-      roundTrip.day !== calendarDate.day ||
-      roundTrip.isLeapMonth !== calendarDate.isLeapMonth
-    ) {
-      throw new BirthNormalizationError(
-        "invalid_lunar_date",
-        `农历日期无法稳定复算：${calendarDate.year}-${calendarDate.month}-${calendarDate.day}`,
-      );
-    }
-  }
-
-  const solarDate = solar.toYmd();
-  assertSupportedSolarDate(solarDate);
-  const resolvedLunar = lunarFields(lunar);
-  const monthNumber = resolvedLunar.isLeapMonth
-    ? -resolvedLunar.month
-    : resolvedLunar.month;
-  const lunarMonth = LunarYear.fromYear(resolvedLunar.year).getMonth(monthNumber);
-  if (!lunarMonth) {
-    throw new BirthNormalizationError(
-      "invalid_lunar_date",
-      `无法读取农历月份：${resolvedLunar.year}-${monthNumber}`,
-    );
-  }
-
-  return calendarResolutionSchema.parse({
-    status: "resolved",
-    solarDate,
-    lunarDate: resolvedLunar,
-    lunarMonthDays: lunarMonth.getDayCount(),
-    engine: {
-      id: "lunar-typescript",
-      version: "1.8.6",
-      sourceIds: ["hko-calendar", "gbt-33661"],
-    },
-  });
+  return resolveHkoCalendarDate(calendarDateSchema.parse(input));
 }
 
 function localDateTimeFor(input: CanonicalBirthInput, solarDate: string) {
@@ -433,8 +334,8 @@ export function normalizeBirth(
     },
     {
       step: "calendar.resolve",
-      engineId: "lunar-typescript",
-      engineVersion: "1.8.6",
+      engineId: "hko-calendar-table",
+      engineVersion: "1.0.0",
       inputRefs: ["canonicalInput.calendarDate"],
       outputRefs: ["calendarResolution"],
       sourceIds: ["hko-calendar", "gbt-33661"],
