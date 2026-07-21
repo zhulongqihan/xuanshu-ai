@@ -51,6 +51,7 @@ describe("HKO 1901-2100 Gregorian-lunar fixture", () => {
     };
 
     expect(manifest.rowCount).toBe(73_049);
+    expect(fixture.content).not.toContain("\r");
     expect(manifest.fixture).toEqual({
       filename: FIXTURE_FILENAME,
       bytes: Buffer.byteLength(fixture.content),
