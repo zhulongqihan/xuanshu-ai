@@ -59,6 +59,8 @@ const SOLAR_TERMS = [
 type SolarTermInstant = {
   id: string;
   name: string;
+  kind: "jie" | "zhongqi";
+  calendarYear: number;
   instant: Temporal.Instant;
 };
 
@@ -81,7 +83,7 @@ function solarTermsForCalendarYear(year: number) {
     return cached;
   }
 
-  const terms = SOLAR_TERMS.map(([id, name, degrees, yearOffset]) => {
+  const terms = SOLAR_TERMS.map(([id, name, degrees, yearOffset], index) => {
     const jde = solarLongitude(
       year + yearOffset,
       earth,
@@ -90,6 +92,8 @@ function solarTermsForCalendarYear(year: number) {
     return {
       id: `solar_term_${id}`,
       name,
+      kind: index % 2 === 0 ? ("jie" as const) : ("zhongqi" as const),
+      calendarYear: year,
       instant: jdeToInstant(jde),
     };
   }).sort(
@@ -97,6 +101,13 @@ function solarTermsForCalendarYear(year: number) {
   );
   solarTermCache.set(year, terms);
   return terms;
+}
+
+export function solarTermInstantsForCalendarYear(year: number) {
+  if (!Number.isInteger(year) || year < 1899 || year > 2102) {
+    throw new RangeError(`节气年份超出可计算范围：${year}`);
+  }
+  return solarTermsForCalendarYear(year).map((term) => ({ ...term }));
 }
 
 function candidateList(timeResolution: TimeResolution) {
