@@ -147,11 +147,22 @@ describe("bazi fact calculation", () => {
       boundary: candidate.dayBoundary,
       day: candidate.pillars.day.name,
       hour: candidate.pillars.hour?.name,
+      sampleCount: candidate.sourceTimeWindows?.reduce(
+        (total, window) => total + window.sampleCount,
+        0,
+      ),
     }))).toEqual([
-      { boundary: "midnight", day: "甲辰", hour: "乙亥" },
-      { boundary: "midnight", day: "甲辰", hour: "甲子" },
-      { boundary: "zi_start", day: "乙巳", hour: "丙子" },
+      { boundary: "midnight", day: "甲辰", hour: "乙亥", sampleCount: 5 },
+      { boundary: "midnight", day: "甲辰", hour: "甲子", sampleCount: 6 },
+      { boundary: "zi_start", day: "乙巳", hour: "丙子", sampleCount: 6 },
     ]);
+    expect(result.candidates[0].sourceTimeWindows).toEqual([{
+      startCivilLocalDateTime: "2024-02-10T22:55:00",
+      endCivilLocalDateTime: "2024-02-10T22:59:00",
+      startUtcInstant: "2024-02-10T14:55:00Z",
+      endUtcInstant: "2024-02-10T14:59:00Z",
+      sampleCount: 5,
+    }]);
     expect(result.warnings[0]).toMatchObject({ code: "birth_time_approximate" });
   });
 
@@ -175,6 +186,24 @@ describe("bazi fact calculation", () => {
     expect(result.candidates).toHaveLength(2);
     expect(new Set(result.candidates.map((candidate) => candidate.utcInstant)).size).toBe(2);
     expect(result.candidates[0].pillars).toEqual(result.candidates[1].pillars);
+    expect(result.candidates.map((candidate) => candidate.sourceTimeWindows)).toEqual([
+      [{
+        startCivilLocalDateTime: "2025-11-02T01:30:00",
+        endCivilLocalDateTime: "2025-11-02T01:31:00",
+        startUtcInstant: "2025-11-02T05:30:00Z",
+        endUtcInstant: "2025-11-02T05:31:00Z",
+        sampleCount: 2,
+        fold: 0,
+      }],
+      [{
+        startCivilLocalDateTime: "2025-11-02T01:30:00",
+        endCivilLocalDateTime: "2025-11-02T01:31:00",
+        startUtcInstant: "2025-11-02T06:30:00Z",
+        endUtcInstant: "2025-11-02T06:31:00Z",
+        sampleCount: 2,
+        fold: 1,
+      }],
+    ]);
   });
 
   it("returns unavailable when an approximate interval is entirely inside a DST gap", () => {

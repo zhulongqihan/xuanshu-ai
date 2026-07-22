@@ -12,7 +12,7 @@ import {
 
 const BAZI_ENGINE = {
   id: "xuanshu-bazi",
-  version: "0.1.0",
+  version: "0.2.0",
   ruleSetId: "bazi-ziping-v1",
   ruleSetVersion: "1.0.0",
   sourceIds: [
@@ -151,6 +151,14 @@ const termRefSchema = z.object({
   name: z.string().min(1),
   utcInstant: z.string().datetime({ offset: true }),
 }).strict();
+const approximateSourceWindowSchema = z.object({
+  startCivilLocalDateTime: z.string().datetime({ local: true }),
+  endCivilLocalDateTime: z.string().datetime({ local: true }),
+  startUtcInstant: z.string().datetime({ offset: true }),
+  endUtcInstant: z.string().datetime({ offset: true }),
+  sampleCount: z.number().int().positive(),
+  fold: z.union([z.literal(0), z.literal(1)]).optional(),
+}).strict();
 const baziCandidateSchema = z.object({
   id: z.string().min(1),
   sourceCandidateId: z.string().min(1),
@@ -159,6 +167,7 @@ const baziCandidateSchema = z.object({
   dayBoundary: z.enum(["midnight", "zi_start"]),
   localDateTime: z.string().optional(),
   utcInstant: z.string().datetime({ offset: true }).optional(),
+  sourceTimeWindows: z.array(approximateSourceWindowSchema).min(1).optional(),
   currentJie: termRefSchema,
   nextJie: termRefSchema,
   pillars: z.object({
@@ -167,7 +176,22 @@ const baziCandidateSchema = z.object({
     day: pillarSchema,
     hour: pillarSchema.nullable(),
   }).strict(),
-}).strict();
+}).strict().superRefine((value, context) => {
+  if (value.timePrecision === "approximate" && !value.sourceTimeWindows) {
+    context.addIssue({
+      code: "custom",
+      path: ["sourceTimeWindows"],
+      message: "约略时间候选必须保留来源时间窗",
+    });
+  }
+  if (value.timePrecision !== "approximate" && value.sourceTimeWindows) {
+    context.addIssue({
+      code: "custom",
+      path: ["sourceTimeWindows"],
+      message: "只有约略时间候选可以包含来源时间窗",
+    });
+  }
+});
 
 export const baziCalculationSchema = z.object({
   schemaVersion: z.literal(1),
@@ -348,6 +372,7 @@ function chartCandidate(args: {
   localDateTime?: string;
   utcInstant: string;
   solarDateForUnknown?: string;
+  sourceTimeWindows?: Array<z.infer<typeof approximateSourceWindowSchema>>;
 }) {
   const instant = Temporal.Instant.from(args.utcInstant);
   const terms = jieContext(instant);
@@ -379,6 +404,7 @@ function chartCandidate(args: {
     dayBoundary: args.dayBoundary,
     ...(args.localDateTime ? { localDateTime: args.localDateTime } : {}),
     utcInstant: args.utcInstant,
+    ...(args.sourceTimeWindows ? { sourceTimeWindows: args.sourceTimeWindows } : {}),
     currentJie: termRef(terms.current),
     nextJie: termRef(terms.next),
     pillars: {
@@ -488,6 +514,42 @@ function candidateSignature(candidate: BaziCandidate, fold?: 0 | 1) {
   ].join(":");
 }
 
+function mergeApproximateSourceWindow(
+  existing: BaziCandidate,
+  incoming: BaziCandidate,
+) {
+  const windows = [...(existing.sourceTimeWindows ?? [])];
+  const next = incoming.sourceTimeWindows?.[0];
+  if (!next) {
+    throw new TypeError(`约略八字候选缺少来源时间窗：${incoming.id}`);
+  }
+  const previous = windows.at(-1);
+  const civilContiguous = previous &&
+    Temporal.PlainDateTime.from(previous.endCivilLocalDateTime)
+      .add({ minutes: 1 })
+      .equals(next.startCivilLocalDateTime);
+  const instantContiguous = previous &&
+    Temporal.Instant.from(previous.endUtcInstant)
+      .add({ seconds: 60 })
+      .equals(next.startUtcInstant);
+  if (
+    previous &&
+    previous.fold === next.fold &&
+    civilContiguous &&
+    instantContiguous
+  ) {
+    windows[windows.length - 1] = {
+      ...previous,
+      endCivilLocalDateTime: next.endCivilLocalDateTime,
+      endUtcInstant: next.endUtcInstant,
+      sampleCount: previous.sampleCount + next.sampleCount,
+    };
+  } else {
+    windows.push(next);
+  }
+  return baziCandidateSchema.parse({ ...existing, sourceTimeWindows: windows });
+}
+
 function approximateCandidates(
   normalized: NormalizedBirth,
   dayBoundaryPolicies: BaziDayBoundary[],
@@ -542,9 +604,20 @@ function approximateCandidates(
             dayBoundary,
             localDateTime: basis.localDateTime,
             utcInstant: civil.utcInstant,
+            sourceTimeWindows: [{
+              startCivilLocalDateTime: civil.localDateTime,
+              endCivilLocalDateTime: civil.localDateTime,
+              startUtcInstant: civil.utcInstant,
+              endUtcInstant: civil.utcInstant,
+              sampleCount: 1,
+              ...(civil.fold === undefined ? {} : { fold: civil.fold }),
+            }],
           });
           const signature = candidateSignature(calculated, civil.fold);
-          if (!unique.has(signature)) {
+          const existing = unique.get(signature);
+          if (existing) {
+            unique.set(signature, mergeApproximateSourceWindow(existing, calculated));
+          } else {
             unique.set(signature, calculated);
           }
         }
