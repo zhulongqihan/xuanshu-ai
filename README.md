@@ -11,9 +11,10 @@
 
 ## 当前阶段
 
-项目已完成 M0 与 M1，具备本地 Web 应用壳、模型配置契约、SQLite 数据层、健康检查、
-Windows 启动器、双平台 CI，以及桌面端与移动端 Playwright 验收。当前进入 M2，开始建设
-确定性历法基座和人物档案。架构、规则边界、资料来源和质量门槛已经形成可追溯文档。
+项目已完成 M0、M1 与 M2，具备本地 Web 应用壳、模型配置契约、SQLite 数据层、健康检查、
+Windows 启动器、1901-2100 年离线公农历转换、可追溯出生时间归一化和人物档案工作流，
+并通过 Windows/Ubuntu CI 与桌面端、移动端 Playwright 验收。当前进入 M3，开始建设八字、
+老黄历和首个证据化 AI 纵向流程。
 
 ## 本地运行
 
@@ -50,6 +51,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 - [术数规则与流派边界](./docs/domain-rules.md)
 - [资料来源注册表](./docs/source-register.md)
 - [质量基线与路线图](./docs/quality-and-roadmap.md)
+- [M2 验收记录](./docs/m2-acceptance.md)
 
 ## 协作方式
 

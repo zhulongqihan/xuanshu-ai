@@ -63,7 +63,9 @@ describe("birth input canonicalization", () => {
     const changed = canonicalizeBirthInput(rawBirth({ chartSex: "female" }));
 
     expect(canonicalBirthJson(first)).toBe(canonicalBirthJson(equivalent));
-    expect(hashCanonicalBirthInput(first)).toMatch(/^[a-f0-9]{64}$/);
+    expect(hashCanonicalBirthInput(first)).toBe(
+      "5d914b2501adeb22a5b7a875ffc02627f1cdd9be14716bcf00b18744d9636bb4",
+    );
     expect(hashCanonicalBirthInput(first)).toBe(hashCanonicalBirthInput(equivalent));
     expect(hashCanonicalBirthInput(first)).not.toBe(hashCanonicalBirthInput(changed));
   });
