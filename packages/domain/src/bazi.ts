@@ -219,6 +219,14 @@ function ganZhiIndex(stemIndex: number, branchIndex: number) {
   return index;
 }
 
+export function sexagenaryName(index: number) {
+  if (!Number.isInteger(index)) {
+    throw new TypeError(`干支索引必须是整数：${index}`);
+  }
+  const normalized = modulo(index, 60);
+  return `${STEMS[normalized % 10][0]}${BRANCHES[normalized % 12][0]}`;
+}
+
 function tenGod(dayStemIndex: number, targetStemIndex: number) {
   const day = stem(dayStemIndex);
   const target = stem(targetStemIndex);
