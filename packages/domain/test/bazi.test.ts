@@ -131,6 +131,96 @@ describe("bazi fact calculation", () => {
       .toEqual(["乙丑", "丙寅"]);
   });
 
+  it("expands an approximate interval into each distinct hour and day-boundary chart", () => {
+    const result = chart(birth({
+      calendarDate: { kind: "solar", date: "2024-02-10" },
+      time: {
+        kind: "approximate",
+        value: "22:55",
+        beforeMinutes: 0,
+        afterMinutes: 10,
+      },
+    }), ["midnight", "zi_start"]);
+
+    expect(result.status).toBe("complete");
+    expect(result.candidates.map((candidate) => ({
+      boundary: candidate.dayBoundary,
+      day: candidate.pillars.day.name,
+      hour: candidate.pillars.hour?.name,
+    }))).toEqual([
+      { boundary: "midnight", day: "甲辰", hour: "乙亥" },
+      { boundary: "midnight", day: "甲辰", hour: "甲子" },
+      { boundary: "zi_start", day: "乙巳", hour: "丙子" },
+    ]);
+    expect(result.warnings[0]).toMatchObject({ code: "birth_time_approximate" });
+  });
+
+  it("retains both DST folds while expanding an approximate interval", () => {
+    const result = chart(birth({
+      calendarDate: { kind: "solar", date: "2025-11-02" },
+      time: {
+        kind: "approximate",
+        value: "01:30",
+        beforeMinutes: 0,
+        afterMinutes: 1,
+      },
+      location: {
+        label: "New York",
+        timeZoneId: "America/New_York",
+        timeZoneSource: "user",
+        timeZoneConfirmed: true,
+      },
+    }));
+
+    expect(result.candidates).toHaveLength(2);
+    expect(new Set(result.candidates.map((candidate) => candidate.utcInstant)).size).toBe(2);
+    expect(result.candidates[0].pillars).toEqual(result.candidates[1].pillars);
+  });
+
+  it("returns unavailable when an approximate interval is entirely inside a DST gap", () => {
+    const result = chart(birth({
+      calendarDate: { kind: "solar", date: "2025-03-09" },
+      time: {
+        kind: "approximate",
+        value: "02:15",
+        beforeMinutes: 10,
+        afterMinutes: 10,
+      },
+      location: {
+        label: "New York",
+        timeZoneId: "America/New_York",
+        timeZoneSource: "user",
+        timeZoneConfirmed: true,
+      },
+    }));
+
+    expect(result.status).toBe("unavailable");
+    expect(result.candidates).toEqual([]);
+    expect(result.warnings[0].code).toBe("approximate_interval_nonexistent");
+  });
+
+  it("keeps valid interval portions when the approximate center is in a DST gap", () => {
+    const result = chart(birth({
+      calendarDate: { kind: "solar", date: "2025-03-09" },
+      time: {
+        kind: "approximate",
+        value: "02:30",
+        beforeMinutes: 45,
+        afterMinutes: 45,
+      },
+      location: {
+        label: "New York",
+        timeZoneId: "America/New_York",
+        timeZoneSource: "user",
+        timeZoneConfirmed: true,
+      },
+    }));
+
+    expect(result.status).toBe("complete");
+    expect(result.candidates.length).toBeGreaterThan(0);
+    expect(result.warnings[0].code).toBe("birth_time_approximate");
+  });
+
   it("refuses to create a chart for a nonexistent DST civil time", () => {
     const result = chart(birth({
       calendarDate: { kind: "solar", date: "2025-03-09" },

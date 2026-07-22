@@ -1,7 +1,14 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
-import { solarTermInstantsForCalendarYear } from "./astronomy";
-import { normalizedBirthSchema, type NormalizedBirth } from "./birth";
+import {
+  resolveApparentSolarTime,
+  solarTermInstantsForCalendarYear,
+} from "./astronomy";
+import {
+  civilTimeCandidateSchema,
+  normalizedBirthSchema,
+  type NormalizedBirth,
+} from "./birth";
 
 const BAZI_ENGINE = {
   id: "xuanshu-bazi",
@@ -423,6 +430,122 @@ function exactCandidates(
   return candidates;
 }
 
+function civilCandidatesForPlainDateTime(
+  plain: Temporal.PlainDateTime,
+  timeZoneId: string,
+  sourceId: string,
+) {
+  const requested = plain.toString({ smallestUnit: "second" });
+  const candidate = (
+    id: string,
+    zonedDateTime: Temporal.ZonedDateTime,
+    fold?: 0 | 1,
+  ) => civilTimeCandidateSchema.parse({
+    id,
+    localDateTime: requested,
+    timeZoneId,
+    utcOffsetSeconds: Math.trunc(zonedDateTime.offsetNanoseconds / 1_000_000_000),
+    utcInstant: zonedDateTime.toInstant().toString({ smallestUnit: "second" }),
+    ...(fold === undefined ? {} : { fold }),
+  });
+
+  try {
+    return [candidate(sourceId, plain.toZonedDateTime(timeZoneId, {
+      disambiguation: "reject",
+    }))];
+  } catch {
+    const earlier = plain.toZonedDateTime(timeZoneId, { disambiguation: "earlier" });
+    const later = plain.toZonedDateTime(timeZoneId, { disambiguation: "later" });
+    const matches = (value: Temporal.ZonedDateTime) =>
+      value.toPlainDateTime().toString({ smallestUnit: "second" }) === requested;
+    if (!matches(earlier) || !matches(later)) {
+      return [];
+    }
+    return [
+      candidate(`${sourceId}:fold-0`, earlier, 0),
+      candidate(`${sourceId}:fold-1`, later, 1),
+    ];
+  }
+}
+
+function candidateSignature(candidate: BaziCandidate, fold?: 0 | 1) {
+  return [
+    candidate.timeBasis,
+    candidate.dayBoundary,
+    fold ?? "single",
+    candidate.pillars.year.name,
+    candidate.pillars.month.name,
+    candidate.pillars.day.name,
+    candidate.pillars.hour?.name ?? "unknown",
+  ].join(":");
+}
+
+function approximateCandidates(
+  normalized: NormalizedBirth,
+  dayBoundaryPolicies: BaziDayBoundary[],
+) {
+  if (normalized.canonicalInput.time.kind !== "approximate") {
+    return [];
+  }
+  const inputTime = normalized.canonicalInput.time;
+  const center = Temporal.PlainDateTime.from(
+    `${normalized.calendarResolution.solarDate}T${inputTime.value}:00`,
+  );
+  const start = center.subtract({ minutes: inputTime.beforeMinutes });
+  const end = center.add({ minutes: inputTime.afterMinutes });
+  const timeZoneId = normalized.canonicalInput.location.timeZoneId;
+  const unique = new Map<string, BaziCandidate>();
+  let sequence = 0;
+
+  for (
+    let plain = start;
+    Temporal.PlainDateTime.compare(plain, end) <= 0;
+    plain = plain.add({ minutes: 1 })
+  ) {
+    const civilCandidates = civilCandidatesForPlainDateTime(
+      plain,
+      timeZoneId,
+      `approx-${sequence}`,
+    );
+    sequence += 1;
+    for (const civil of civilCandidates) {
+      const apparent = resolveApparentSolarTime(normalized.canonicalInput, {
+        status: "resolved",
+        candidate: civil,
+      });
+      const bases = [
+        { basis: "civil" as const, localDateTime: civil.localDateTime },
+        ...(apparent.status === "resolved"
+          ? [{
+              basis: "apparent_solar" as const,
+              localDateTime: apparent.candidates[0].apparentLocalDateTime,
+            }]
+          : []),
+      ];
+      for (const basis of bases) {
+        const hour = Temporal.PlainDateTime.from(basis.localDateTime).hour;
+        const policies = hour === 23 ? dayBoundaryPolicies : ["midnight" as const];
+        for (const dayBoundary of policies) {
+          const calculated = chartCandidate({
+            id: `${civil.id}:${basis.basis}:${dayBoundary}`,
+            sourceCandidateId: civil.id,
+            timeBasis: basis.basis,
+            timePrecision: "approximate",
+            dayBoundary,
+            localDateTime: basis.localDateTime,
+            utcInstant: civil.utcInstant,
+          });
+          const signature = candidateSignature(calculated, civil.fold);
+          if (!unique.has(signature)) {
+            unique.set(signature, calculated);
+          }
+        }
+      }
+    }
+  }
+  return [...unique.values()];
+}
+
 function unknownTimeCandidates(normalized: NormalizedBirth) {
   const solarDate = normalized.calendarResolution.solarDate;
   const timeZoneId = normalized.canonicalInput.location.timeZoneId;
@@ -465,7 +588,23 @@ export function calculateBazi(
   let candidates: BaziCandidate[] = [];
   let status: BaziCalculation["status"] = "complete";
 
-  if (normalized.timeResolution.status === "nonexistent") {
+  if (normalized.canonicalInput.time.kind === "approximate") {
+    candidates = approximateCandidates(normalized, dayBoundaryPolicies);
+    if (candidates.length === 0) {
+      status = "unavailable";
+      warnings.push({
+        code: "approximate_interval_nonexistent",
+        message: "约略时间区间内没有有效民用时刻，未生成八字候选。",
+        candidateIds: [],
+      });
+    } else {
+      warnings.push({
+        code: "birth_time_approximate",
+        message: `约略时间区间展开为 ${candidates.length} 个不同四柱候选。`,
+        candidateIds: candidates.map((candidate) => candidate.id),
+      });
+    }
+  } else if (normalized.timeResolution.status === "nonexistent") {
     status = "unavailable";
     warnings.push({
       code: "civil_time_nonexistent",
@@ -484,14 +623,6 @@ export function calculateBazi(
     });
   } else {
     candidates = exactCandidates(normalized, dayBoundaryPolicies);
-    if (normalized.canonicalInput.time.kind === "approximate") {
-      status = "partial";
-      warnings.push({
-        code: "approximate_time_center_only",
-        message: "当前结果使用约略时间中心值；跨边界候选将在区间展开步骤中补充。",
-        candidateIds: candidates.map((candidate) => candidate.id),
-      });
-    }
   }
 
   return baziCalculationSchema.parse({
