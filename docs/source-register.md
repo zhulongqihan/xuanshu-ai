@@ -20,10 +20,10 @@
 | `hko-calendar-api` | S0 | [香港天文台开放数据目录](https://data.gov.hk/en-data/dataset/hk-hko-rss-gregorian-lunar-calendar-conversion-table)；[按日期 JSON API](https://data.weather.gov.hk/weatherAPI/opendata/lunardate.php?date=[YYYY-MM-DD]) | 生成和抽样复核公农历 fixture；不作为运行时依赖 |
 | `iana-tzdb` | S0 | [IANA Time Zone Database](https://www.iana.org/time-zones) | 历史民用时区、UTC 偏移和夏令时 |
 | `rfc-8785` | S0 | [RFC 8785 JSON Canonicalization Scheme](https://www.rfc-editor.org/rfc/rfc8785) | 出生输入稳定序列化与 SHA-256 复算 |
-| `gbt-33661` | S0 | GB/T 33661-2017《农历的编算和颁行》 | 农历术语、编算与发布边界 |
+| `gbt-33661` | S0 | GB/T 33661-2017《农历的编算和颁行》 | 农历术语、编算与发布边界；第 6.3.2 条干支纪日法及 `1949-10-01 = 甲子日` 锚点 |
 | `meeus-aa` | S0 | Jean Meeus, *Astronomical Algorithms* | 儒略日、太阳视黄经和时间方程交叉验证 |
 | `yuanhai-ziping` | S1 | 《渊海子平》 | 子平法基础规则 |
-| `sanming-tonghui` | S1 | 《三命通会》 | 八字规则、例证与历史差异 |
+| `sanming-tonghui` | S1 | [《三命通会》卷二](https://zh.wikisource.org/wiki/三命通會/卷二) | “论遁月时”的五虎遁、五鼠遁；“论人元司事”的古籍人元表；“论大运”的顺逆与三日折一年 |
 | `ditiansui` | S1 | 《滴天髓》 | 五行气势与解释规则来源 |
 | `ziping-zhenquan` | S1 | 《子平真诠》 | 月令、格局规则来源 |
 | `ziwei-quanshu` | S1 | 《紫微斗数全书》 | 紫微安星与传统解释来源 |
