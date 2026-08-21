@@ -1,7 +1,7 @@
 # 玄枢 AI 安全审查记录
 
 审查日期：2026-08-21
-审查范围：Next.js 16.2.10 / React 19 / TypeScript，本地 Web、Server Actions、备份接口、模型适配层、Windows 启动器。
+审查范围：Next.js 16.3.2 / React 19 / TypeScript，本地 Web、Server Actions、备份接口、模型适配层、Windows 启动器。
 结论：代码侧未发现已确认的高危 XSS、动态执行、密钥泄露或 SQL 注入；已补齐基础响应头。应用的安全前提是默认只监听本机回环地址，尚未设计公网多用户认证。
 
 ## 已修复或通过验证
@@ -51,7 +51,7 @@
 
 ## 发布前仍需外部证据
 
-- `pnpm audit` 需要网络可用后执行并记录依赖漏洞结果；当前审查未把网络不可用误报为“无漏洞”。
+- 官方 registry 的 `pnpm audit --prod --registry=https://registry.npmjs.org/` 已通过，结果为 `No known vulnerabilities found`；仓库默认镜像不提供 audit endpoint，不能用默认源替代该结果。
 - 真实模型配置下验证超时、429/5xx、结构化输出失败和中转站留存策略。
 - 干净 Windows 环境验证首次依赖安装、升级和桌面快捷方式启动。
 

@@ -12,13 +12,13 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@js-temporal/polyfill": "0.5.1",
     "@xuanshu/agent": "workspace:*",
     "@xuanshu/domain": "workspace:*",
-    "@js-temporal/polyfill": "0.5.1",
     "better-sqlite3": "^12.11.1",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.24.0",
-    "next": "16.2.10",
+    "next": "16.3.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "server-only": "^0.0.1",
@@ -32,7 +32,7 @@
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "16.3.2",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }
