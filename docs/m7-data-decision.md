@@ -20,7 +20,7 @@
 
 - `apps/web/test/data-backup.test.ts`：完整数据导出、清空、恢复，以及非法字段在清空前被拒绝。
 - 同一测试文件覆盖未来 `schemaVersion` 的安全拒绝，作为跨版本兼容策略的回归门槛。
-- Web 全量测试：11 个测试文件、37 个测试通过。
+- Web 全量测试：11 个测试文件、38 个测试通过。
 - 生产构建识别 `/api/backup` 动态路由。
 - 浏览器验收：设置页桌面/移动视口可用；390px 宽度下 `scrollWidth=390`，无横向溢出。
 - 下载接口返回 `200`、`application/json`、附件文件名和 `schemaVersion=1`，包含 7 张数据表。
