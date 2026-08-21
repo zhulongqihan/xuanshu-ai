@@ -78,7 +78,7 @@ export const liuyaoReferenceCaseSchema = commonReferenceCaseSchema.extend({
 export const referenceCaseSchema = z.discriminatedUnion("system", [
   ziweiReferenceCaseSchema,
   liuyaoReferenceCaseSchema,
-]).superRefine(refineReviewState);
+]);
 
 export type ReferenceCase = z.infer<typeof referenceCaseSchema>;
 
