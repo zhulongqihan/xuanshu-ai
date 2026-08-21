@@ -35,6 +35,9 @@ function errorMessage(error: unknown) {
     if (error.kind === "transport") return "暂时无法连接模型服务，请检查网络或稍后重试。";
     return "模型服务暂时不可用，请稍后重试。";
   }
+  if (error instanceof Error && error.message.startsWith("缺少环境变量")) {
+    return `${error.message}。请在本机配置模型密钥后重试。`;
+  }
   return "咨询未完成，系统没有保存未经校验的模型回答。";
 }
 
