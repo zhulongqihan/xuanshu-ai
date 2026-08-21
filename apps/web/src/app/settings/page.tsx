@@ -13,6 +13,9 @@ export default async function SettingsPage() {
     readDatabaseStatus(),
     loadAppConfig(),
   ]);
+  const modelConfigured = Boolean(
+    process.env[modelConfig.config.provider.api_key_env]?.trim(),
+  );
 
   return (
     <div className="page-frame">
@@ -36,8 +39,8 @@ export default async function SettingsPage() {
             <h2>模型提供商</h2>
             <p>
               {modelConfig.source === "file"
-                ? `${modelConfig.config.provider.model} · ${modelConfig.config.provider.api_mode}`
-                : `默认配置 · ${modelConfig.config.provider.model}`}
+                ? `${modelConfig.config.provider.model} · ${modelConfig.config.provider.api_mode} · ${modelConfigured ? "密钥已配置" : "未配置密钥"}`
+                : `默认配置 · ${modelConfig.config.provider.model} · ${modelConfigured ? "密钥已配置" : "未配置密钥"}`}
             </p>
           </div>
           <button className="secondary-button" type="button" disabled>
