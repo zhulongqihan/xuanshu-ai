@@ -1,37 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { evaluationCases } from "../evaluation/cases";
+import { evaluationFactsForQuestion } from "../evaluation/fixtures";
 import {
-  consultationFactsSchema,
   consultWithModel,
   loadAppConfig,
   resolveApiKey,
-  routeQuestion,
   validateConsultationModelResponse,
 } from "../src";
 
 const shouldRun = process.env.XUANSHU_RUN_MODEL_EVAL === "1";
 const concurrency = 4;
-
-const fixtureFacts = {
-  bazi: "确定性评测事实：日主为癸水。",
-  ziwei: "确定性评测事实：命宫主星为紫微。",
-  almanac: "确定性评测事实：日干支为甲子。",
-  liuyao: "确定性评测事实：本卦为乾。",
-} as const;
-
-function factsFor(question: string) {
-  const route = routeQuestion(question);
-  return consultationFactsSchema.parse({
-    version: 1,
-    route,
-    systems: route.systems.map((system) => ({
-      system,
-      status: "complete",
-      facts: [fixtureFacts[system]],
-      evidenceRuleIds: [`evaluation.${system}.fixture-v1`],
-    })),
-  });
-}
 
 describe.skipIf(!shouldRun)("真实模型 200 问题评测", () => {
   it("passes structured output, evidence ownership, and high-risk caution gates", async () => {
@@ -43,7 +21,7 @@ describe.skipIf(!shouldRun)("真实模型 200 问题评测", () => {
       const batch = evaluationCases.slice(index, index + concurrency);
       const results = await Promise.all(batch.map(async (item) => {
         try {
-          const facts = factsFor(item.question);
+          const facts = evaluationFactsForQuestion(item.question);
           const response = await consultWithModel({
             config,
             apiKey,
