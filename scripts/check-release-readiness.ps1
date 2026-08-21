@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$ReferenceCasesPath = ""
+    [string]$ReferenceCasesPath = "",
+    [switch]$SecondWindowsVerified
 )
 
 $ErrorActionPreference = "Continue"
@@ -35,6 +36,12 @@ function Invoke-Pnpm {
     } finally {
         Pop-Location
     }
+}
+
+if ($SecondWindowsVerified) {
+    Set-Result -Name secondWindows -Value "已由操作者确认：另一台 Windows 验收清单已完成"
+} else {
+    Set-Result -Name secondWindows -Value "阻断：尚未完成另一台 Windows 或干净虚拟机验收" -Blocking $true
 }
 
 if (-not $pnpm) {
@@ -104,5 +111,5 @@ if ($hasBlockingResult) {
     exit 1
 }
 
-Write-Output "结论：所有自动化发布闸门通过；仍需保留第二台 Windows 的人工验收记录。"
+Write-Output "结论：所有自动化发布闸门通过，且已收到第二台 Windows 的人工确认。"
 exit 0
