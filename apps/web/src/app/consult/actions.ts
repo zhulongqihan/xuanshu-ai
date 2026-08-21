@@ -93,11 +93,16 @@ export async function askConsultationAction(
     const profile = listStoredProfiles().find((item) => item.id === profileId);
     if (!profile) return { status: "error", message: "人物档案不存在，可能已经被删除。" };
     const route = routeQuestion(question);
-    const snapshot = createStoredBaziSnapshot(profile.id);
-    if (!snapshot) return { status: "error", message: "当前档案还没有可验证的八字快照。" };
+    const snapshot = route.systems.includes("bazi")
+      ? createStoredBaziSnapshot(profile.id)
+      : undefined;
+    if (route.systems.includes("bazi") && !snapshot) {
+      return { status: "error", message: "当前档案还没有可验证的八字快照。" };
+    }
 
-    const baziFacts = buildBaziConsultationFacts(snapshot);
-    const systems = [baziFacts.systems[0]];
+    const systems = snapshot
+      ? [buildBaziConsultationFacts(snapshot).systems[0]]
+      : [];
     const profileTimeZone = profile.birthRecord.rawInput.location.timeZoneId;
     const ziweiSnapshot = route.systems.includes("ziwei") ? createStoredZiweiSnapshot(profile.id) : undefined;
     const liuyaoCase = route.systems.includes("liuyao") ? listStoredLiuyaoCases(profile.id)[0] : undefined;
@@ -140,7 +145,7 @@ export async function askConsultationAction(
         evidenceOwnerByRuleId.set(item.ruleId, owner);
       }
     };
-    addEvidence(snapshot.payload.chart.evidence, "bazi");
+    addEvidence(snapshot?.payload.chart.evidence ?? [], "bazi");
     addEvidence(ziweiSnapshot?.payload.chart.evidence ?? [], "ziwei");
     addEvidence(liuyaoCase?.calculation.evidence ?? [], "liuyao");
     addEvidence(almanacResult?.evidence ?? [], "almanac");
