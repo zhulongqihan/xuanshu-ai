@@ -1,6 +1,7 @@
 export * from "./astronomy";
 export * from "./bazi";
 export * from "./bazi-luck";
+export * from "./bazi-strength";
 export * from "./birth";
 export * from "./errors";
 export * from "./hko-calendar";
