@@ -76,7 +76,7 @@ export function validateConsultationModelResponse(
         (owner): owner is ConsultationFacts["systems"][number]["system"] => Boolean(owner),
       ),
     );
-    if (owners.size !== claim.evidenceRuleIds.length) {
+    if (owners.size === 0 || claim.evidenceRuleIds.some((ruleId) => !ownersByRuleId.has(ruleId))) {
       throw new ConsultationProviderError("模型引用了当前 facts 之外的规则", "schema");
     }
     if (claim.system && claim.system !== "synthesis" && !owners.has(claim.system)) {

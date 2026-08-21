@@ -134,6 +134,21 @@ describe("consultation model adapter", () => {
     }, almanacFacts)).toThrow("标记成了当前术数");
   });
 
+  it("accepts multiple evidence rules owned by the same system", () => {
+    expect(validateConsultationModelResponse({
+      answer: "事实层显示日主为癸水，月令为巳火。",
+      claims: [{
+        system: "bazi",
+        text: "当前候选的日主为癸水，月令关系为巳火。",
+        certainty: "deterministic",
+        evidenceRuleIds: ["bazi.day.gbt-anchor-v1", "bazi.strength.month-order-v1"],
+        appliesTo: "当前候选",
+        uncertainty: [],
+      }],
+      cautions: [],
+    }, facts).claims).toHaveLength(1);
+  });
+
   it("requires a safety caution for high-risk questions", () => {
     const highRiskFacts = {
       ...facts,
