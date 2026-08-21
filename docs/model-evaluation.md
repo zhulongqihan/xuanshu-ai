@@ -23,8 +23,10 @@ PowerShell：
 
 ```powershell
 $env:XUANSHU_RUN_MODEL_EVAL = "1"
+$env:XUANSHU_MODEL_EVAL_REPORT_PATH = ".\tmp\model-evaluation-report.json"
 pnpm --filter @xuanshu/agent exec vitest run test/model-evaluation.test.ts --reporter=verbose
 Remove-Item Env:XUANSHU_RUN_MODEL_EVAL
+Remove-Item Env:XUANSHU_MODEL_EVAL_REPORT_PATH
 ```
 
 真实评测从本机环境变量读取密钥，使用固定的脱敏 facts fixture，不把真实出生资料发送给模型。每条问题检查：
@@ -36,6 +38,8 @@ Remove-Item Env:XUANSHU_RUN_MODEL_EVAL
 5. 高风险问题是否返回安全提醒。
 
 评测器只记录案例 ID 和错误类型，不打印模型回答或密钥。它验证的是 Agent 协议与安全边界，不能替代人工判断传统规则是否合乎某一流派；M4/M5 的参考盘复核仍需使用有出处的独立资料完成。
+
+如果设置 `XUANSHU_MODEL_EVAL_REPORT_PATH`，评测器会额外写出脱敏 JSON 报告，只包含总数、通过数、失败案例 ID、错误类型和时间戳；报告不应提交到 Git。
 
 ## 通过标准
 

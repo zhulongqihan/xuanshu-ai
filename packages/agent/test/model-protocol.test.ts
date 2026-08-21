@@ -9,6 +9,7 @@ import {
   evaluationFactsForQuestion,
   evaluationResponseForFacts,
 } from "../evaluation/fixtures";
+import { createModelEvaluationReport } from "../evaluation/report";
 
 describe("200 条评测集的模型协议 dry-run", () => {
   it("runs every case through the adapter and semantic validator without a network key", async () => {
@@ -30,5 +31,25 @@ describe("200 条评测集的模型协议 dry-run", () => {
       expect(validateConsultationModelResponse(response, facts)).toEqual(response);
       expect(fetcher).toHaveBeenCalledTimes(1);
     }
+  });
+
+  it("creates a redacted, deterministic report summary", () => {
+    expect(createModelEvaluationReport({
+      startedAt: "2026-08-22T00:00:00.000Z",
+      completedAt: "2026-08-22T00:00:01.000Z",
+      results: [
+        { id: "bazi-01", status: "passed" },
+        { id: "ziwei-01", status: "failed", kind: "schema" },
+      ],
+    })).toEqual({
+      schemaVersion: 1,
+      suite: "xuanshu-agent-model-evaluation-v1",
+      total: 2,
+      passed: 1,
+      failed: 1,
+      failures: [{ id: "ziwei-01", kind: "schema" }],
+      startedAt: "2026-08-22T00:00:00.000Z",
+      completedAt: "2026-08-22T00:00:01.000Z",
+    });
   });
 });
