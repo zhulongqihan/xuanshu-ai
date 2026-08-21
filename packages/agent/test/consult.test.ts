@@ -175,4 +175,31 @@ describe("consultation model adapter", () => {
       cautions: [],
     }, highRiskFacts)).toThrow("安全提醒");
   });
+
+  it("does not persist deterministic or rule-based claims for high-risk questions", () => {
+    const highRiskFacts = {
+      ...facts,
+      route: {
+        version: 1 as const,
+        primarySystem: "bazi" as const,
+        systems: ["bazi" as const],
+        mode: "single" as const,
+        matchedTerms: ["健康"],
+        reasons: ["命中健康术语"],
+        safety: { level: "high_risk" as const, cautions: ["请咨询专业人士"] },
+      },
+    };
+    expect(() => validateConsultationModelResponse({
+      answer: "只能作传统文化参考。",
+      claims: [{
+        system: "bazi",
+        text: "当前结构不能确定健康结果。",
+        certainty: "deterministic",
+        evidenceRuleIds: ["bazi.day.gbt-anchor-v1"],
+        appliesTo: "健康问题",
+        uncertainty: ["不能据此判断健康结果"],
+      }],
+      cautions: ["请咨询专业人士"],
+    }, highRiskFacts)).toThrow("高风险主题");
+  });
 });

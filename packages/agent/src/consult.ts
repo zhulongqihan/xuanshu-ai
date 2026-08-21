@@ -88,6 +88,14 @@ export function validateConsultationModelResponse(
     if (!claim.system && owners.size > 1 && facts.route?.mode !== "synthesis") {
       throw new ConsultationProviderError("跨术数证据必须明确标记为综合 claim", "schema");
     }
+    const referencesHighRiskTopic = facts.route?.safety.level === "high_risk"
+      && facts.route.matchedTerms.some((term) => claim.text.includes(term) || claim.appliesTo.includes(term));
+    if (
+      referencesHighRiskTopic
+      && (claim.certainty === "deterministic" || claim.certainty === "rule_based")
+    ) {
+      throw new ConsultationProviderError("高风险主题不能保存为确定性结论", "schema");
+    }
   }
 
   return parsed;
