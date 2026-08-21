@@ -3,6 +3,7 @@ import nextConfig from "../next.config";
 
 describe("security headers", () => {
   it("defines same-origin browser safety headers for every route", async () => {
+    expect(nextConfig.poweredByHeader).toBe(false);
     const headers = await nextConfig.headers?.();
     expect(headers).toEqual([
       expect.objectContaining({

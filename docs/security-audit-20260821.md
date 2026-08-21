@@ -11,7 +11,7 @@
 - 严重性：Medium，已修复。
 - 位置：[apps/web/next.config.ts](../apps/web/next.config.ts):7-17。
 - 证据：统一返回 `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'`、`X-Frame-Options: DENY`、`X-Content-Type-Options: nosniff`、`Referrer-Policy: no-referrer` 和限制摄像头/麦克风/地理位置的 `Permissions-Policy`。
-- 验证：`apps/web/test/security-headers.test.ts`；生产服务访问 `/settings` 返回上述全部响应头。
+- 验证：`apps/web/test/security-headers.test.ts`；生产服务访问 `/settings` 返回上述全部响应头，并且不返回 `X-Powered-By`。
 - 说明：CSP 当前是点击劫持、基址和表单来源的安全基线，不包含完整的 `script-src` nonce 策略；若未来公开部署或引入第三方脚本，需要单独设计严格 CSP。
 
 ### SEC-02：密钥只在服务端解析
