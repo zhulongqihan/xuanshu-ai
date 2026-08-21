@@ -1741,6 +1741,56 @@ button:disabled {
   font-size: 12px;
 }
 
+.almanac-activity-factors {
+  display: grid;
+  gap: 3px;
+  margin: 8px 0 0;
+  padding: 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  list-style: none;
+}
+
+.almanac-activity-factors li {
+  display: block;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+}
+
+.almanac-activity-factors span {
+  margin-right: 5px;
+  color: var(--primary-hover);
+  font-weight: 700;
+}
+
+.almanac-activity-badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.almanac-activity-favorable {
+  color: var(--success-ink);
+  background: var(--success-soft);
+}
+
+.almanac-activity-caution,
+.almanac-activity-insufficient {
+  color: var(--warning-ink);
+  background: var(--warning-soft);
+}
+
+.almanac-activity-conflict {
+  color: var(--danger-ink);
+  background: var(--danger-soft);
+}
+
 .almanac-pending-badge {
   display: inline-flex;
   flex: 0 0 auto;

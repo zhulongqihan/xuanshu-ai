@@ -18,9 +18,9 @@ const JIANCHU = ["建", "除", "满", "平", "定", "执", "破", "危", "成", 
 
 const ALMANAC_ENGINE = {
   id: "xuanshu-almanac",
-  version: "0.1.0",
+  version: "0.2.0",
   ruleSetId: "almanac-xiejibianfang-v1",
-  ruleSetVersion: "1.0.0",
+  ruleSetVersion: "1.1.0",
   sourceIds: ["hko-calendar", "gbt-33661", "meeus-aa", "xiejibianfang"],
 } as const;
 
@@ -32,11 +32,22 @@ const termSchema = z.object({
   timeZoneId: timeZoneSchema,
 }).strict();
 
+const activityStatusSchema = z.enum(["favorable", "caution", "conflict", "insufficient"]);
+
+const activityFactorSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  signal: z.enum(["support", "caution", "conflict", "context"]),
+  detail: z.string().min(1),
+  ruleId: z.string().min(1),
+}).strict();
+
 const activitySchema = z.object({
   id: z.enum(["travel", "moving", "contract", "worship"]),
   label: z.string().min(1),
-  status: z.literal("not_evaluated"),
+  status: activityStatusSchema,
   message: z.string().min(1),
+  factors: z.array(activityFactorSchema).min(1),
 }).strict();
 
 export const almanacInputSchema = z.object({
@@ -92,6 +103,8 @@ export const almanacCalculationSchema = z.object({
 export type AlmanacInput = z.infer<typeof almanacInputSchema>;
 export type AlmanacCalculation = z.infer<typeof almanacCalculationSchema>;
 
+export type AlmanacActivityStatus = z.infer<typeof activityStatusSchema>;
+
 const JIE_TO_MONTH_BRANCH = new Map([
   ["solar_term_xiaohan", 1],
   ["solar_term_lichun", 2],
@@ -106,6 +119,29 @@ const JIE_TO_MONTH_BRANCH = new Map([
   ["solar_term_lidong", 11],
   ["solar_term_daxue", 0],
 ]);
+
+const ACTIVITY_RULES = {
+  travel: {
+    label: "出行",
+    favorable: ["成", "开"],
+    conflict: ["破", "闭"],
+  },
+  moving: {
+    label: "搬迁",
+    favorable: ["满", "成", "开"],
+    conflict: ["破", "闭"],
+  },
+  contract: {
+    label: "签约",
+    favorable: ["定", "成", "开"],
+    conflict: ["破", "闭"],
+  },
+  worship: {
+    label: "祭祀",
+    favorable: ["除", "成", "开"],
+    conflict: ["破", "闭"],
+  },
+} as const;
 
 function elementForStem(index: number) {
   return ELEMENTS[Math.floor(index / 2) % ELEMENTS.length];
@@ -153,6 +189,33 @@ function evidence(ruleId: string, sourceId: EvidenceRef["sourceId"], locator: st
   return evidenceRefSchema.parse({ ruleId, sourceId, locator });
 }
 
+function evaluateActivity(
+  id: keyof typeof ACTIVITY_RULES,
+  jianChu: (typeof JIANCHU)[number],
+) {
+  const config = ACTIVITY_RULES[id];
+  const status: AlmanacActivityStatus = (config.favorable as readonly string[]).includes(jianChu)
+    ? "favorable"
+    : (config.conflict as readonly string[]).includes(jianChu)
+      ? "conflict"
+      : "caution";
+  const ruleId = `almanac.activity.${id}-jianchu-v1`;
+  const signal = status === "favorable" ? "support" : status === "conflict" ? "conflict" : "caution";
+  const detail = status === "favorable"
+    ? `“${jianChu}”位于${config.label}的通用支持集合`
+    : status === "conflict"
+      ? `“${jianChu}”位于${config.label}的通用冲突集合`
+      : `“${jianChu}”未进入${config.label}的首版支持或冲突集合，仅作谨慎提示`;
+  return {
+    id,
+    label: config.label,
+    status,
+    message: `建除${detail}；首版只完成建除层，不替代完整事项择日。`,
+    factors: [{ id: "jianchu", label: "建除", signal, detail, ruleId }],
+    ruleId,
+  };
+}
+
 export function calculateAlmanac(input: AlmanacInput): AlmanacCalculation {
   const normalized = almanacInputSchema.parse(input);
   const calendar = resolveHkoCalendarDate({ kind: "solar", date: normalized.solarDate });
@@ -165,12 +228,9 @@ export function calculateAlmanac(input: AlmanacInput): AlmanacCalculation {
     throw new RangeError(`未登记的黄历月令节气：${terms.currentJie.id}`);
   }
   const jianChuIndex = (dayBranchIndex - monthBranchIndex + 12) % 12;
-  const activities = [
-    ["travel", "出行"],
-    ["moving", "搬迁"],
-    ["contract", "签约"],
-    ["worship", "祭祀"],
-  ] as const;
+  const activities = (Object.keys(ACTIVITY_RULES) as Array<keyof typeof ACTIVITY_RULES>)
+    .map((id) => evaluateActivity(id, JIANCHU[jianChuIndex]));
+  const activityRuleIds = activities.map((activity) => activity.ruleId);
   const result = {
     schemaVersion: 1 as const,
     status: "complete" as const,
@@ -204,12 +264,7 @@ export function calculateAlmanac(input: AlmanacInput): AlmanacCalculation {
       dayBranch: BRANCHES[dayBranchIndex],
       clashBranch: BRANCHES[(dayBranchIndex + 6) % 12],
     },
-    activities: activities.map(([id, label]) => ({
-      id,
-      label,
-      status: "not_evaluated" as const,
-      message: "首版只提供日期事实；未完成该事项的逐条宜忌校验，不输出单一吉凶结论。",
-    })),
+    activities: activities.map(({ ruleId, ...activity }) => activity),
     evidence: [
       evidence("almanac.lunar-date-hko-v1", "hko-calendar", "1901-2100 公农历逐日离线表"),
       evidence("almanac.sexagenary-day-v1", "gbt-33661", "第 6.3.2 条；1949-10-01=甲子日锚点"),
@@ -217,6 +272,7 @@ export function calculateAlmanac(input: AlmanacInput): AlmanacCalculation {
       evidence("almanac.jianchu-v1", "xiejibianfang", "建除十二神：月令地支与日支顺序"),
       evidence("almanac.clash-v1", "xiejibianfang", "日支相冲：相隔六位地支"),
       evidence("almanac.activity-scope-v1", "xiejibianfang", "事项宜忌必须绑定具体事项并逐条校验"),
+      ...activityRuleIds.map((ruleId) => evidence(ruleId, "xiejibianfang", "首版事项规则：建除与具体事项的支持、谨慎、冲突集合")),
     ],
     ruleIds: [
       "almanac.lunar-date-hko-v1",
@@ -225,6 +281,7 @@ export function calculateAlmanac(input: AlmanacInput): AlmanacCalculation {
       "almanac.jianchu-v1",
       "almanac.clash-v1",
       "almanac.activity-scope-v1",
+      ...activityRuleIds,
     ],
   };
   return almanacCalculationSchema.parse(result);

@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, BookOpenText, CalendarDays, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpenText, CalendarDays, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { calculateAlmanac, type AlmanacCalculation } from "@xuanshu/domain";
@@ -25,6 +25,15 @@ function todayInShanghai() {
 
 function formatTerm(term: AlmanacCalculation["solarTerms"]["previous"]) {
   return `${term.name} · ${term.localDateTime.replace("T", " ")}`;
+}
+
+function activityStatusLabel(status: AlmanacCalculation["activities"][number]["status"]) {
+  return ({
+    favorable: "适合候选",
+    caution: "谨慎",
+    conflict: "冲突",
+    insufficient: "资料不足",
+  } as const)[status];
 }
 
 function AlmanacFacts({ result }: { result: AlmanacCalculation }) {
@@ -58,12 +67,21 @@ function AlmanacFacts({ result }: { result: AlmanacCalculation }) {
       </section>
 
       <section className="workspace-panel almanac-activities" aria-labelledby="almanac-activities-title">
-        <div className="section-heading"><div><h2 id="almanac-activities-title">事项入口</h2><p>先选具体事项，再逐条加载对应规则</p></div></div>
+        <div className="section-heading"><div><h2 id="almanac-activities-title">事项筛查</h2><p>首版完成建除层；状态是候选信号，不是单一吉凶指数</p></div></div>
         <ul className="almanac-activity-list">
           {result.activities.map((activity) => (
-            <li key={activity.id}>
-              <div><strong>{activity.label}</strong><small>{activity.message}</small></div>
-              <span className="almanac-pending-badge"><AlertTriangle aria-hidden="true" size={13} />待补充规则</span>
+            <li key={activity.id} data-status={activity.status}>
+              <div>
+                <strong>{activity.label}</strong>
+                <small>{activity.message}</small>
+                <ul className="almanac-activity-factors">
+                  {activity.factors.map((factor) => <li key={factor.id}><span>{factor.label}</span>{factor.detail} · {factor.ruleId}</li>)}
+                </ul>
+              </div>
+              <span className={`almanac-activity-badge almanac-activity-${activity.status}`}>
+                {activity.status === "favorable" ? <CheckCircle2 aria-hidden="true" size={13} /> : activity.status === "conflict" ? <XCircle aria-hidden="true" size={13} /> : <AlertTriangle aria-hidden="true" size={13} />}
+                {activityStatusLabel(activity.status)}
+              </span>
             </li>
           ))}
         </ul>
@@ -75,7 +93,7 @@ function AlmanacFacts({ result }: { result: AlmanacCalculation }) {
           {result.evidence.map((item) => <li key={item.ruleId}><strong>{item.ruleId}</strong><span>{item.sourceId}</span><small>{item.locator}</small></li>)}
         </ul>
       </section>
-      <p className="chart-disclaimer">黄历事实用于传统文化研究、娱乐与自我反思参考，不构成科学定论；具体事项规则完成前，不将日期标为绝对吉凶。</p>
+      <p className="chart-disclaimer">黄历事实用于传统文化研究、娱乐与自我反思参考，不构成科学定论；当前事项筛查只完成建除层，未合并值神、二十八宿、日时宜忌和个人命盘冲合。</p>
     </div>
   );
 }
@@ -95,7 +113,7 @@ export default async function AlmanacPage({ searchParams }: { searchParams: Sear
 
   return (
     <div className="page-frame">
-      <PageHeader title="择日" description="老黄历事实与事项入口" />
+      <PageHeader title="择日" description="老黄历事实与事项筛查" />
       <section className="workspace-panel almanac-input-panel" aria-labelledby="almanac-input-title">
         <div className="section-heading">
           <div><h2 id="almanac-input-title">选择日期</h2><p>断网可用，正式范围为 1901-01-01 至 2100-12-31</p></div>

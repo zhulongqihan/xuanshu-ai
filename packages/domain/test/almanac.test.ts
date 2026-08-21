@@ -31,7 +31,9 @@ describe("almanac facts", () => {
       clash: { dayBranch: "未", clashBranch: "丑" },
     });
     expect(result.activities).toHaveLength(4);
-    expect(result.activities.every((item) => item.status === "not_evaluated")).toBe(true);
+    expect(result.activities.every((item) => ["favorable", "caution", "conflict", "insufficient"].includes(item.status))).toBe(true);
+    expect(result.activities.map((item) => item.status)).toEqual(["caution", "favorable", "caution", "caution"]);
+    expect(result.activities.every((item) => item.factors.length > 0)).toBe(true);
     expect(result.evidence.map((item) => item.ruleId)).toEqual(result.ruleIds);
   });
 
@@ -42,6 +44,19 @@ describe("almanac facts", () => {
     expect(result.solarTerms.currentJie.localDateTime).toContain("T");
     expect(result.solarTerms.nextJie.utcInstant).toMatch(/Z|[+-]\d{2}:\d{2}$/);
     expect(result.engine.sourceIds).toContain("meeus-aa");
+  });
+
+  it("exposes an explicit conflict signal for a broken-day activity rule", () => {
+    const result = almanac("1990-05-22");
+
+    expect(result.jianChu.name).toBe("破");
+    expect(result.activities.map((item) => item.status)).toEqual([
+      "conflict",
+      "conflict",
+      "conflict",
+      "conflict",
+    ]);
+    expect(result.activities.every((item) => item.factors[0]?.signal === "conflict")).toBe(true);
   });
 
   it("rejects dates outside the formal HKO range", () => {
