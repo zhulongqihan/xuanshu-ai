@@ -20,4 +20,18 @@ describe("consultation facts boundary", () => {
     expect(facts.systems.map((item) => item.system)).toEqual(["almanac"]);
     expect(facts.systems.some((item) => item.system === "bazi")).toBe(false);
   });
+
+  it("rejects a system that is outside the deterministic route", () => {
+    const route = routeQuestion("明天适合签约吗？");
+    const almanac = calculateAlmanac({
+      schemaVersion: 1,
+      solarDate: "2026-08-22",
+      timeZoneId: "Asia/Shanghai",
+    });
+
+    expect(() => buildConsultationFacts(route, [
+      buildAlmanacConsultationSystem(almanac),
+      { system: "bazi", status: "complete", facts: ["不应被发送"], evidenceRuleIds: [] },
+    ])).toThrow("路由未声明");
+  });
 });

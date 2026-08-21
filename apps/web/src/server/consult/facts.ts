@@ -148,6 +148,10 @@ export function buildConsultationFacts(
   route: RouteDecision,
   systems: ConsultationFacts["systems"],
 ): ConsultationFacts {
+  const routedSystems = new Set(route.systems);
+  if (systems.some((item) => !routedSystems.has(item.system))) {
+    throw new TypeError("咨询 facts 包含路由未声明的术数系统");
+  }
   const unique = systems.filter((item, index, all) => all.findIndex((candidate) => candidate.system === item.system) === index);
   return consultationFactsSchema.parse({ version: 1, route, systems: unique });
 }
