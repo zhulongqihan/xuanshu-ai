@@ -28,3 +28,5 @@
 - `packages/domain/test/liuyao.test.ts` 覆盖乾卦静卦、动爻变卦、硬币原始记录复算和审计篡改拒绝。
 - `packages/domain/test/schemas.test.ts` 覆盖六爻输入顺序与 18 次硬币记录长度。
 - 规则版本：`xuanshu-liuyao@0.1.0` / `liuyao-wenwanggua-v1@1.0.0`。
+
+参考案例必须按 [M4/M5 参考案例复核契约](./reference-case-review.md) 记录来源和逐字段复核状态；当前 100 个独立人工/参考案例仍待补，不把现有工程回归测试计入黄金集。
