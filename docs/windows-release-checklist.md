@@ -13,8 +13,11 @@
 - `pnpm install --frozen-lockfile` 成功；
 - `pnpm check` 成功：lint、类型检查、Agent 23 项（真实模型 1 项默认跳过）、Domain 80 项、Web 38 项、生产构建；
 - `pnpm --filter @xuanshu/web start` 成功；
+- `scripts/install-windows.ps1` 在隔离目标目录成功创建快捷方式，目标、参数和工作目录均指向该提交的启动脚本与仓库；
+- `scripts/start-windows.ps1 -NoBrowser` 使用专用 `XUANSHU_AI_DATA_DIR` 成功启动，日志目录和数据库目录已创建；
 - `/api/health` 返回 `status=ok`；
 - `/`、`/almanac`、`/charts`、`/consult`、`/liuyao`、`/profiles`、`/settings`、`/sources`、`/ziwei` 均返回 200；
+- 监听地址确认为 `127.0.0.1:3000`；
 - `X-Powered-By` 不存在，CSP 和 `X-Frame-Options: DENY` 正常；
 - 服务停止后 3000 端口释放。
 
