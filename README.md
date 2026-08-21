@@ -68,6 +68,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 - [质量基线与路线图](./docs/quality-and-roadmap.md)
 - [M7 本地数据管理决策](./docs/m7-data-decision.md)
 - [安全审查记录](./docs/security-audit-20260821.md)
+- [确定性引擎性能基线](./docs/performance-baseline-20260821.md)
 - [M2 验收记录](./docs/m2-acceptance.md)
 
 ## 协作方式
