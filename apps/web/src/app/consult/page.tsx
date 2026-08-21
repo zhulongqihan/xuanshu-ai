@@ -2,7 +2,6 @@ import { AlertTriangle, BookOpenText, MessageCircleMore, ShieldCheck } from "luc
 import Link from "next/link";
 import { connection } from "next/server";
 import { PageHeader } from "@/components/page-header";
-import { createStoredBaziSnapshot } from "@/server/charts";
 import {
   getStoredConsultation,
   listStoredConsultations,
@@ -97,13 +96,6 @@ export default async function ConsultPage({ searchParams }: { searchParams: Sear
   const summaries = listStoredConsultations(profile.id);
   const selectedSummary = summaries.find((item) => item.id === consultationId) ?? summaries[0];
   const consultation = selectedSummary ? getStoredConsultation(selectedSummary.id) : undefined;
-  let snapshotReady = false;
-  try {
-    snapshotReady = Boolean(createStoredBaziSnapshot(profile.id));
-  } catch {
-    snapshotReady = false;
-  }
-
   return (
     <div className="page-frame">
       <PageHeader title="咨询" description={`${summaries.length} 个本地会话 · 只解释已验证事实`} />
@@ -111,7 +103,7 @@ export default async function ConsultPage({ searchParams }: { searchParams: Sear
       <div className="consult-layout">
         <section className="workspace-panel consult-ask-panel" aria-labelledby="consult-ask-title">
           <div className="section-heading"><div><h2 id="consult-ask-title">提出问题</h2><p>当前档案：{profile.displayName}</p></div><MessageCircleMore aria-hidden="true" size={19} /></div>
-          {snapshotReady ? <ConsultForm profileId={profile.id} /> : <div className="consult-blocked" role="alert"><AlertTriangle aria-hidden="true" size={19} /><p>当前档案无法生成经过校验的八字快照，暂不调用模型。</p><Link className="secondary-button" href={`/charts?profileId=${profile.id}`}>查看命盘</Link></div>}
+          <ConsultForm profileId={profile.id} />
         </section>
         {summaries.length > 0 ? (
           <section className="workspace-panel consult-history-panel" aria-labelledby="consult-history-title">

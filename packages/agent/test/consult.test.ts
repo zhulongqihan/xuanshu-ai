@@ -4,6 +4,7 @@ import {
   consultationModelResponseSchema,
   consultWithModel,
   ConsultationProviderError,
+  validateConsultationModelResponse,
 } from "../src/consult";
 
 const facts = {
@@ -98,5 +99,65 @@ describe("consultation model adapter", () => {
 
   it("keeps the response schema strict", () => {
     expect(() => consultationModelResponseSchema.parse({ answer: "ok", claims: [], cautions: [], extra: true })).toThrow();
+  });
+
+  it("rejects a claim that relabels another system's evidence", () => {
+    const almanacFacts = {
+      version: 1 as const,
+      route: {
+        version: 1 as const,
+        primarySystem: "almanac" as const,
+        systems: ["almanac" as const],
+        mode: "single" as const,
+        matchedTerms: ["黄历"],
+        reasons: ["命中黄历术语"],
+        safety: { level: "normal" as const, cautions: [] },
+      },
+      systems: [{
+        system: "almanac" as const,
+        status: "complete",
+        facts: ["日干支：甲子"],
+        evidenceRuleIds: ["almanac.day-v1"],
+      }],
+    };
+    expect(() => validateConsultationModelResponse({
+      answer: "这是八字事实。",
+      claims: [{
+        system: "bazi",
+        text: "这是八字事实。",
+        certainty: "deterministic",
+        evidenceRuleIds: ["almanac.day-v1"],
+        appliesTo: "当前日期",
+        uncertainty: [],
+      }],
+      cautions: [],
+    }, almanacFacts)).toThrow("标记成了当前术数");
+  });
+
+  it("requires a safety caution for high-risk questions", () => {
+    const highRiskFacts = {
+      ...facts,
+      route: {
+        version: 1 as const,
+        primarySystem: "bazi" as const,
+        systems: ["bazi" as const],
+        mode: "single" as const,
+        matchedTerms: ["健康"],
+        reasons: ["命中健康术语"],
+        safety: { level: "high_risk" as const, cautions: ["请咨询专业人士"] },
+      },
+    };
+    expect(() => validateConsultationModelResponse({
+      answer: "只能作传统文化参考。",
+      claims: [{
+        system: "bazi",
+        text: "日主为癸水。",
+        certainty: "deterministic",
+        evidenceRuleIds: ["bazi.day.gbt-anchor-v1"],
+        appliesTo: "当前候选",
+        uncertainty: [],
+      }],
+      cautions: [],
+    }, highRiskFacts)).toThrow("安全提醒");
   });
 });

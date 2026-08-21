@@ -44,6 +44,55 @@ export const consultationModelResponseSchema = z
 
 export type ConsultationModelResponse = z.infer<typeof consultationModelResponseSchema>;
 
+/**
+ * Validate the semantic boundary between a model claim and the facts bundle.
+ * Zod guarantees the shape; this function guarantees that the model cannot
+ * relabel another system's evidence or omit all auditable claims when facts
+ * are available.
+ */
+export function validateConsultationModelResponse(
+  response: unknown,
+  facts: ConsultationFacts,
+): ConsultationModelResponse {
+  const parsed = consultationModelResponseSchema.parse(response);
+  const ownersByRuleId = new Map<string, ConsultationFacts["systems"][number]["system"]>();
+  for (const system of facts.systems) {
+    for (const ruleId of system.evidenceRuleIds) {
+      ownersByRuleId.set(ruleId, system.system);
+    }
+  }
+
+  const hasAvailableFacts = facts.systems.some((system) => system.status !== "unavailable");
+  if (hasAvailableFacts && parsed.claims.length === 0) {
+    throw new ConsultationProviderError("模型没有返回任何可核验的事实引用", "schema");
+  }
+  if (facts.route?.safety.level === "high_risk" && parsed.cautions.length === 0) {
+    throw new ConsultationProviderError("高风险问题缺少安全提醒", "schema");
+  }
+
+  for (const claim of parsed.claims) {
+    const owners = new Set(
+      claim.evidenceRuleIds.map((ruleId) => ownersByRuleId.get(ruleId)).filter(
+        (owner): owner is ConsultationFacts["systems"][number]["system"] => Boolean(owner),
+      ),
+    );
+    if (owners.size !== claim.evidenceRuleIds.length) {
+      throw new ConsultationProviderError("模型引用了当前 facts 之外的规则", "schema");
+    }
+    if (claim.system && claim.system !== "synthesis" && !owners.has(claim.system)) {
+      throw new ConsultationProviderError("模型将其他术数的证据标记成了当前术数", "schema");
+    }
+    if (claim.system === "synthesis" && facts.route?.mode !== "synthesis") {
+      throw new ConsultationProviderError("单术数问题不能生成综合 claim", "schema");
+    }
+    if (!claim.system && owners.size > 1 && facts.route?.mode !== "synthesis") {
+      throw new ConsultationProviderError("跨术数证据必须明确标记为综合 claim", "schema");
+    }
+  }
+
+  return parsed;
+}
+
 export type ConsultRequest = {
   config: AppConfig;
   apiKey: string;

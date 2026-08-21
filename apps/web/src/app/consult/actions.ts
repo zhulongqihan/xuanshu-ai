@@ -3,10 +3,10 @@
 import {
   ConsultationProviderError,
   consultWithModel,
-  consultationModelResponseSchema,
   loadAppConfig,
   routeQuestion,
   resolveApiKey,
+  validateConsultationModelResponse,
 } from "@xuanshu/agent";
 import { calculateAlmanac, claimSchema, type EvidenceRef } from "@xuanshu/domain";
 import { revalidatePath } from "next/cache";
@@ -131,12 +131,12 @@ export async function askConsultationAction(
 
     const appConfig = await loadAppConfig();
     const apiKey = resolveApiKey(appConfig.config);
-    const response = consultationModelResponseSchema.parse(await consultWithModel({
+    const response = validateConsultationModelResponse(await consultWithModel({
       config: appConfig.config,
       apiKey,
       question,
       facts,
-    }));
+    }), facts);
     const evidenceSources = new Map<string, EvidenceRef>();
     const evidenceOwnerByRuleId = new Map<string, "bazi" | "ziwei" | "almanac" | "liuyao">();
     const addEvidence = (items: EvidenceRef[], owner: "bazi" | "ziwei" | "almanac" | "liuyao") => {
@@ -165,8 +165,9 @@ export async function askConsultationAction(
         uncertainty: claim.uncertainty,
       });
     });
-    const content = response.cautions.length > 0
-      ? `${response.answer}\n\n注意：${response.cautions.join("；")}`
+    const cautions = [...new Set([...response.cautions, ...route.safety.cautions])];
+    const content = cautions.length > 0
+      ? `${response.answer}\n\n注意：${cautions.join("；")}`
       : response.answer;
     const consultation = createStoredConsultation(profile.id, question.slice(0, 80));
     appendStoredMessage(consultation.id, { role: "user", content: question });
