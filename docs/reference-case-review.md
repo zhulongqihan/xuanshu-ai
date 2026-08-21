@@ -44,7 +44,6 @@ Remove-Item Env:XUANSHU_REFERENCE_CASES_PATH
 - 紫微：0 个已通过独立资料人工复核、可计入黄金集的案例；现有 `packages/domain/test/ziwei.test.ts` 只计工程回归；
 - 六爻：0 个已通过独立资料人工复核、可计入黄金集的案例；现有 `packages/domain/test/liuyao.test.ts` 只计工程回归；
 - 已登记 4 个 S3 开源交叉验证候选（`chinese-fortune-liuyao`、固定提交 `5329166` 的 `yaomancy-liuyao-engine`、固定提交 `1a5a78b` 的 `johnson-jia-liuyao`、固定提交 `af36dfd1c85aaaa8a853d7d766e7dabbe6823367` 的 `tianjiyao-wiki-cases`），用于装卦链路和案例入口交叉验证；前者的卦名正文与逐爻表存在可复核冲突，第二个来源的 5 个锚点案例明确为 draft，第三个来源实际含 2 个 JSON 示例但带有解读文本，第四个来源的案例字段不完整或按篇幅省略，四者均不计入黄金集；
-- 已新增固定提交 `af36dfd1c85aaaa8a853d7d766e7dabbe6823367` 的 `tianjiyao-wiki` 候选，包含紫微案例页与六爻实战案例页；其部分案例字段不完整或按篇幅省略，仍需逐案补齐并人工复核，当前不计入黄金集；
 - 现有工程回归覆盖了精确/约略/未知时刻、静卦、动爻、硬币审计和篡改拒绝等首版边界，但不替代 100+100 参考集。
 
 ## 关闭条件
