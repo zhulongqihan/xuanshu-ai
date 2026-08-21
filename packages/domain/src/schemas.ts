@@ -88,6 +88,10 @@ export const liuyaoCastSchema = z
       .object({
         algorithm: z.string().min(1),
         nonce: z.string().min(1),
+        draws: z
+          .array(z.union([z.literal(2), z.literal(3)]))
+          .length(18)
+          .optional(),
       })
       .strict()
       .optional(),

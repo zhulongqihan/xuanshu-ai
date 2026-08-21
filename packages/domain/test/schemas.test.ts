@@ -46,4 +46,22 @@ describe("liuyaoCastSchema", () => {
       }),
     ).toThrow();
   });
+
+  it("keeps all 18 coin draws when a coin cast is audited", () => {
+    const cast = liuyaoCastSchema.parse({
+      question: "硬币审计",
+      method: "coins",
+      lineOrder: "bottom_to_top",
+      lines: [6, 7, 8, 9, 6, 7],
+      castAt: "2026-07-15T23:30:00+08:00",
+      timeZone: "Asia/Shanghai",
+      locationName: "上海市",
+      randomAudit: {
+        algorithm: "test",
+        nonce: "nonce-1",
+        draws: [2, 2, 2, 2, 3, 2, 2, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 3],
+      },
+    });
+    expect(cast.randomAudit?.draws).toHaveLength(18);
+  });
 });

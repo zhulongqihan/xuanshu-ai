@@ -6,6 +6,7 @@ export * from "./bazi-strength";
 export * from "./birth";
 export * from "./errors";
 export * from "./hko-calendar";
+export * from "./liuyao";
 export * from "./normalization";
 export * from "./schemas";
 export * from "./ziwei";
