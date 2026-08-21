@@ -3,6 +3,7 @@ import { loadAppConfig } from "@xuanshu/agent";
 import { connection } from "next/server";
 import { PageHeader } from "@/components/page-header";
 import { readDatabaseStatus } from "@/server/db";
+import { DataManagement } from "./data-management";
 
 export const metadata = { title: "设置" };
 
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
           </button>
         </section>
       </div>
+      <DataManagement />
     </div>
   );
 }

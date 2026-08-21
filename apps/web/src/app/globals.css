@@ -595,6 +595,102 @@ button:disabled {
   text-wrap: pretty;
 }
 
+.settings-data-panel {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.settings-data-icon {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--primary-hover);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.settings-data-content {
+  padding: 16px 18px 18px;
+}
+
+.settings-data-note,
+.settings-data-warning {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.settings-data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.settings-data-actions form {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-data-form input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.danger-button {
+  min-height: 38px;
+  border: 1px solid oklch(0.72 0.12 25);
+  border-radius: var(--radius-md);
+  color: oklch(0.42 0.13 25);
+  background: var(--surface);
+  padding: 0 15px;
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.danger-button:hover:not(:disabled) {
+  border-color: oklch(0.56 0.17 25);
+  background: oklch(0.96 0.035 25);
+}
+
+.form-error,
+.form-success,
+.settings-data-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.form-error {
+  margin: 13px 0 0;
+  color: var(--danger, oklch(0.48 0.16 25));
+  font-size: 12px;
+}
+
+.form-success {
+  margin: 13px 0 0;
+  color: oklch(0.34 0.09 155);
+  font-size: 12px;
+}
+
+.settings-data-warning {
+  margin-top: 12px;
+  color: var(--warning-ink);
+}
+
 .status-badge {
   display: inline-flex;
   min-height: 26px;
