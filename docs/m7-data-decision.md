@@ -22,6 +22,7 @@
 - 生产构建识别 `/api/backup` 动态路由。
 - 浏览器验收：设置页桌面/移动视口可用；390px 宽度下 `scrollWidth=390`，无横向溢出。
 - 下载接口返回 `200`、`application/json`、附件文件名和 `schemaVersion=1`，包含 7 张数据表。
+- Windows PowerShell 验收：脚本解析通过，安装脚本在隔离目录生成 `.lnk`，启动脚本通过 `/api/health` 健康检查；测试进程随后已停止。
 
 ## 尚未关闭的发布项
 
