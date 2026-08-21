@@ -167,4 +167,23 @@ describe("local data backup", () => {
     expect(repository.get(profile.id)?.displayName).toBe("保留测试");
     sqlite.close();
   });
+
+  it("rejects a future backup version without touching existing data", async () => {
+    const { db, sqlite } = await createTemporaryDatabase();
+    const repository = createProfileRepository(db, {
+      createId: (() => {
+        const ids = ["profile-1", "birth-record-1"];
+        return () => ids.shift() ?? "unexpected-id";
+      })(),
+      now: () => "2026-08-21T12:00:00+08:00",
+    });
+    const profile = repository.create({ displayName: "版本测试", birthInput: birthInput() });
+    const backup = exportBackup(sqlite, () => "2026-08-21T12:00:00+08:00");
+    const futureBackup = { ...backup, schemaVersion: 2 };
+
+    expect(() => restoreBackup(sqlite, futureBackup)).toThrow();
+    expect(count(sqlite, "profiles")).toBe(1);
+    expect(repository.get(profile.id)?.displayName).toBe("版本测试");
+    sqlite.close();
+  });
 });
