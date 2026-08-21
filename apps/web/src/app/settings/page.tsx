@@ -42,6 +42,7 @@ export default async function SettingsPage() {
                 ? `${modelConfig.config.provider.model} · ${modelConfig.config.provider.api_mode} · ${modelConfigured ? "密钥已配置" : "未配置密钥"}`
                 : `默认配置 · ${modelConfig.config.provider.model} · ${modelConfigured ? "密钥已配置" : "未配置密钥"}`}
             </p>
+            {!modelConfigured ? <small className="settings-hint">请在环境变量 {modelConfig.config.provider.api_key_env} 中配置密钥后重启应用</small> : null}
           </div>
           <button className="secondary-button" type="button" disabled>
             配置

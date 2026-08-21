@@ -614,6 +614,14 @@ button:disabled {
   text-wrap: pretty;
 }
 
+.settings-hint {
+  display: block;
+  margin-top: 5px;
+  color: var(--warning-ink);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .settings-data-panel {
   margin-top: 20px;
   border: 1px solid var(--line);

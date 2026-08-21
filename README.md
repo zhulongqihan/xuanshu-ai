@@ -34,6 +34,18 @@ pnpm check
 设置页的“数据管理”可以下载 JSON 备份、恢复备份或清空本机数据。备份包含出生日期、
 时间、地点等敏感资料，应只保存到你信任的位置；恢复前会校验格式，失败不会清空现有数据。
 
+### 可选的模型配置
+
+确定性排盘、黄历和六爻功能不需要模型密钥。若要启用 AI 咨询：
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.xuanshu-ai"
+Copy-Item .\config.example.toml "$env:USERPROFILE\.xuanshu-ai\config.toml"
+[Environment]::SetEnvironmentVariable("XUANSHU_AI_API_KEY", "你的密钥", "User")
+```
+
+重启应用即可。密钥只放在环境变量中，不要写入 `config.toml`、代码或提交记录。
+
 当前应用只包含可验证的工作区与状态，不会显示尚未实现的虚构命理结果。
 
 ### Windows 桌面快捷方式
