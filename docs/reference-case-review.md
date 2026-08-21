@@ -26,6 +26,14 @@
 
 代码契约位于 `packages/domain/src/reference-cases.ts`：紫微和六爻输入分别通过对应 schema，案例状态、来源、断言和隐私标记会在导入时校验；`reviewed` 没有复核记录、案例 ID 重复或包含个人资料时会被拒绝。统计只计算 `status: reviewed` 的案例。
 
+发布闸门位于 `packages/domain/test/reference-case-gate.test.ts`。参考案例文件不进入仓库，准备好本地脱敏 JSON 后运行：
+
+```powershell
+$env:XUANSHU_REFERENCE_CASES_PATH = "C:\path\to\reference-cases.json"
+pnpm --filter @xuanshu/domain exec vitest run test/reference-case-gate.test.ts
+Remove-Item Env:XUANSHU_REFERENCE_CASES_PATH
+```
+
 ## 当前可计数状态
 
 截至 2026-08-22：
