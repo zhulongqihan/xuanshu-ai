@@ -4,10 +4,12 @@
 
 ## 当前机器的隔离验收
 
-已从提交 `74a03a9` 导出到仓库外的全新目录 `C:\Users\yang\AppData\Local\Temp\xuanshu-ai-clean-20260822`，未复用仓库 `node_modules` 或本地数据库。结果：
+已从最新提交 `46b85b9` 导出到仓库外的全新目录
+`C:\Users\yang\AppData\Local\Temp\xuanshu-ai-clean-latest-20260822`，未复用仓库
+`node_modules` 或本地数据库。结果：
 
 - `pnpm install --frozen-lockfile` 成功；
-- `pnpm check` 成功：lint、类型检查、Agent 21 项（真实模型 1 项默认跳过）、Domain 76 项、Web 38 项、生产构建；
+- `pnpm check` 成功：lint、类型检查、Agent 23 项（真实模型 1 项默认跳过）、Domain 80 项、Web 38 项、生产构建；
 - `pnpm --filter @xuanshu/web start` 成功；
 - `/api/health` 返回 `status=ok`；
 - `/`、`/almanac`、`/charts`、`/consult`、`/liuyao`、`/profiles`、`/settings`、`/sources`、`/ziwei` 均返回 200；
