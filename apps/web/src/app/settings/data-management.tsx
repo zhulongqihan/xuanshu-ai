@@ -78,12 +78,13 @@ export function DataManagement() {
               name="backupFile"
               type="file"
               accept="application/json,.json"
+              aria-label="JSON 备份文件"
               required
               disabled={restorePending}
             />
             <button className="primary-button button-with-icon" type="submit" disabled={restorePending}>
               {restorePending ? <LoaderCircle className="button-spinner" aria-hidden="true" size={16} /> : null}
-              {restorePending ? "正在恢复" : "确认恢复"}
+              {restorePending ? "正在恢复…" : "确认恢复"}
             </button>
           </form>
           <form

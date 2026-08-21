@@ -18,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
+        <a className="skip-link" href="#main-content">跳转到主要内容</a>
         <div className="app-shell">
           <AppNavigation />
           <main className="app-main" id="main-content">

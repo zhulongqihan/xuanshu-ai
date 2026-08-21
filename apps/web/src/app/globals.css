@@ -210,6 +210,25 @@ textarea:focus-visible {
   margin-left: var(--sidebar-width);
 }
 
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-160%);
+  border-radius: var(--radius-md);
+  color: oklch(0.99 0 0);
+  background: var(--primary);
+  padding: 9px 13px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 160ms var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 .page-frame {
   width: min(1180px, 100%);
   margin: 0 auto;
