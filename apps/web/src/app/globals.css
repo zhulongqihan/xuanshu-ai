@@ -2005,6 +2005,268 @@ button:disabled {
   }
 }
 
+.consult-profile-form,
+.consult-form {
+  display: grid;
+  gap: 12px;
+}
+
+.consult-profile-form {
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  align-items: center;
+  padding: 0 20px 20px;
+}
+
+.consult-profile-form label,
+.consult-form label {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.consult-profile-form select,
+.consult-form textarea {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.consult-profile-form select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.consult-form {
+  padding: 0 20px 20px;
+}
+
+.consult-form textarea {
+  min-height: 128px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.consult-form textarea:focus,
+.consult-profile-form select:focus {
+  border-color: var(--primary);
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.consult-form-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.consult-form-footer p {
+  max-width: 56ch;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.button-spinner {
+  animation: consult-spin 0.9s linear infinite;
+}
+
+@keyframes consult-spin {
+  to { transform: rotate(360deg); }
+}
+
+.consult-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.46fr);
+  gap: 18px;
+}
+
+.consult-profile-selector,
+.consult-thread,
+.consult-empty-inline {
+  grid-column: 1 / -1;
+}
+
+.consult-history-list,
+.consult-message-list,
+.consult-claims ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.consult-history-list {
+  display: grid;
+  gap: 1px;
+  padding: 0 10px 10px;
+}
+
+.consult-history-list a {
+  display: grid;
+  gap: 5px;
+  padding: 12px 10px;
+  border-radius: 6px;
+  color: var(--ink);
+}
+
+.consult-history-list a:hover,
+.consult-history-list a[data-active="true"] {
+  background: var(--surface-muted);
+  color: var(--primary-hover);
+}
+
+.consult-history-list strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consult-history-list small {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.consult-message-list {
+  display: grid;
+  gap: 20px;
+  padding: 0 20px 22px;
+}
+
+.consult-message {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.consult-message-meta {
+  padding-top: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.consult-message-content {
+  min-width: 0;
+  border-left: 2px solid var(--line);
+  padding-left: 16px;
+}
+
+.consult-message-content > p {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--ink);
+  line-height: 1.75;
+}
+
+.consult-message-user .consult-message-content {
+  border-left-color: var(--line-strong);
+}
+
+.consult-claims {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.consult-claims summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--primary-hover);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.consult-claims ul {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.consult-claims li {
+  display: grid;
+  gap: 3px;
+  border-left: 2px solid var(--primary);
+  padding-left: 10px;
+}
+
+.consult-claims li strong {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.consult-claims li span {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.consult-claims li small {
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.consult-blocked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 20px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.consult-blocked p {
+  flex: 1;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.consult-empty-inline {
+  min-height: 160px;
+}
+
+@media (max-width: 900px) {
+  .consult-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .consult-profile-form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .consult-profile-form select,
+  .consult-profile-form button,
+  .consult-form button {
+    width: 100%;
+  }
+
+  .consult-form-footer {
+    flex-direction: column;
+  }
+
+  .consult-message {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .consult-message-meta {
+    padding-top: 0;
+  }
+
+.consult-message-content {
+    padding-left: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
