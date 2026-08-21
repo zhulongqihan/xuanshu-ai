@@ -29,14 +29,18 @@ export async function restoreBackupAction(
   try {
     const input: unknown = JSON.parse(await file.text());
     restoreStoredBackup(input);
-    refreshDataViews();
-    return { status: "success", message: "本地数据已恢复。" };
   } catch {
     return {
       status: "error",
       message: "备份无效或与当前版本不兼容，现有数据未被修改。",
     };
   }
+  try {
+    refreshDataViews();
+  } catch {
+    return { status: "success", message: "本地数据已恢复，请刷新页面查看最新内容。" };
+  }
+  return { status: "success", message: "本地数据已恢复。" };
 }
 
 export async function deleteAllDataAction(
@@ -47,9 +51,13 @@ export async function deleteAllDataAction(
   void _formData;
   try {
     deleteAllStoredData();
-    refreshDataViews();
-    return { status: "success", message: "本机保存的全部数据已清空。" };
   } catch {
     return { status: "error", message: "数据清空失败，现有数据未被修改。" };
   }
+  try {
+    refreshDataViews();
+  } catch {
+    return { status: "success", message: "本机保存的全部数据已清空，请刷新页面查看最新内容。" };
+  }
+  return { status: "success", message: "本机保存的全部数据已清空。" };
 }
