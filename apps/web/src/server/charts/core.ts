@@ -1,12 +1,15 @@
 import {
   baziCalculationSchema,
   baziLuckCalculationSchema,
+  baziStrengthCalculationSchema,
   calculateBazi,
   calculateBaziLuck,
+  calculateBaziStrength,
   chartSnapshotSchema,
   evidenceRefSchema,
   type BaziCalculation,
   type BaziLuckCalculation,
+  type BaziStrengthCalculation,
   type ChartSnapshot,
   type EvidenceRef,
   type NormalizedBirth,
@@ -18,10 +21,11 @@ import { chartSnapshots } from "../db/schema";
 import type { StoredProfile } from "../profiles/core";
 
 type BaziSnapshotChart = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   birthRecordId: string;
   bazi: BaziCalculation;
   luck: BaziLuckCalculation;
+  strength: BaziStrengthCalculation;
   evidence: EvidenceRef[];
 };
 
@@ -107,6 +111,22 @@ const EVIDENCE_BY_RULE: Record<string, Omit<EvidenceRef, "ruleId">> = {
     sourceId: "iana-tzdb",
     locator: "出生民用本地时间加符号时长后的时区转换",
   },
+  "bazi.strength.month-order-v1": {
+    sourceId: "ziping-zhenquan",
+    locator: "月令与子平旺衰语境",
+  },
+  "bazi.strength.visible-hidden-count-v1": {
+    sourceId: "sanming-tonghui",
+    locator: "卷二·论人元司事；透干与藏干基础量",
+  },
+  "bazi.strength.root-v1": {
+    sourceId: "ditiansui",
+    locator: "五行气势与根气的项目基础量",
+  },
+  "bazi.strength.support-ratio-v1": {
+    sourceId: "ditiansui",
+    locator: "五行生克支持关系的透明工程分级",
+  },
 };
 
 function evidenceForRules(ruleIds: string[]) {
@@ -129,7 +149,7 @@ function parseBaziSnapshotPayload(value: unknown): BaziSnapshotPayload {
     throw new TypeError("八字快照缺少结构化 chart 内容");
   }
   if (
-    payload.chart.schemaVersion !== 1 ||
+    payload.chart.schemaVersion !== 2 ||
     typeof payload.chart.birthRecordId !== "string" ||
     !Array.isArray(payload.chart.evidence)
   ) {
@@ -138,19 +158,28 @@ function parseBaziSnapshotPayload(value: unknown): BaziSnapshotPayload {
   return {
     ...payload,
     chart: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       birthRecordId: payload.chart.birthRecordId,
       bazi: baziCalculationSchema.parse(payload.chart.bazi),
       luck: baziLuckCalculationSchema.parse(payload.chart.luck),
+      strength: baziStrengthCalculationSchema.parse(payload.chart.strength),
       evidence: payload.chart.evidence.map((item) => evidenceRefSchema.parse(item)),
     },
   };
 }
 
-function warningMessages(bazi: BaziCalculation, luck: BaziLuckCalculation) {
+function warningMessages(
+  bazi: BaziCalculation,
+  luck: BaziLuckCalculation,
+  strength: BaziStrengthCalculation,
+) {
   return [
     ...bazi.warnings.map((warning) => warning.message),
     ...luck.warnings.map((warning) => warning.message),
+    ...strength.warnings.map((warning) => warning.message),
+    ...strength.candidates.flatMap((candidate) =>
+      candidate.warnings.map((warning) => warning.message),
+    ),
   ];
 }
 
@@ -181,6 +210,7 @@ function parseStoredSnapshot(row: {
     payload.chart.birthRecordId !== row.birthRecordId ||
     payload.chart.bazi.inputHash !== row.inputHash ||
     payload.chart.luck.inputHash !== row.inputHash ||
+    payload.chart.strength.inputHash !== row.inputHash ||
     row.warningsJson !== JSON.stringify(payload.warnings)
   ) {
     throw new Error(`八字快照 ${row.id} 的元数据与内容不一致`);
@@ -203,10 +233,11 @@ function buildPayload(
   profile: SnapshotProfile,
   bazi: BaziCalculation,
   luck: BaziLuckCalculation,
+  strength: BaziStrengthCalculation,
   createdAt: string,
 ) {
-  const ruleIds = [...bazi.ruleIds, ...luck.ruleIds];
-  const warnings = warningMessages(bazi, luck);
+  const ruleIds = [...bazi.ruleIds, ...luck.ruleIds, ...strength.ruleIds];
+  const warnings = warningMessages(bazi, luck, strength);
   return parseBaziSnapshotPayload({
     id,
     inputHash: profile.birthRecord.inputHash,
@@ -216,13 +247,18 @@ function buildPayload(
       id: bazi.engine.ruleSetId,
       version: bazi.engine.ruleSetVersion,
       status: "active",
-      sourceIds: [...new Set([...bazi.engine.sourceIds, ...luck.engine.sourceIds])],
+      sourceIds: [...new Set([
+        ...bazi.engine.sourceIds,
+        ...luck.engine.sourceIds,
+        ...strength.engine.sourceIds,
+      ])],
     },
     chart: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       birthRecordId: profile.birthRecord.id,
       bazi,
       luck,
+      strength,
       evidence: evidenceForRules(ruleIds),
     },
     calculationTrace: [
@@ -230,6 +266,7 @@ function buildPayload(
       `bazi:${bazi.engine.id}@${bazi.engine.version}`,
       `bazi-candidates:${bazi.candidates.map((candidate) => candidate.id).join(",") || "none"}`,
       `luck:${luck.engine.id}@${luck.engine.version}`,
+      `strength:${strength.engine.id}@${strength.engine.version}`,
       ...ruleIds.map((ruleId) => `rule:${ruleId}`),
     ],
     warnings,
@@ -259,7 +296,12 @@ export function createBaziSnapshotRepository(
       .orderBy(desc(chartSnapshots.createdAt), desc(chartSnapshots.id))
       .limit(1)
       .get();
-    return row ? parseStoredSnapshot(row) : undefined;
+    if (!row) return undefined;
+    const rawPayload = JSON.parse(row.payloadJson) as { chart?: { schemaVersion?: unknown } };
+    if (rawPayload.chart?.schemaVersion === 1) {
+      return undefined;
+    }
+    return parseStoredSnapshot(row);
   };
 
   return {
@@ -272,6 +314,7 @@ export function createBaziSnapshotRepository(
       const luck = baziLuckCalculationSchema.parse(
         calculateBaziLuck(normalized, bazi, options),
       );
+      const strength = baziStrengthCalculationSchema.parse(calculateBaziStrength(bazi));
       const existing = findLatest(
         profile,
         bazi.engine.version,
@@ -284,7 +327,7 @@ export function createBaziSnapshotRepository(
 
       const id = createId();
       const createdAt = now();
-      const payload = buildPayload(id, profile, bazi, luck, createdAt);
+      const payload = buildPayload(id, profile, bazi, luck, strength, createdAt);
       db.insert(chartSnapshots)
         .values({
           id,

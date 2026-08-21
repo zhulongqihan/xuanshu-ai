@@ -48,6 +48,72 @@ function ageLabel(age: {
   return `${age.years}年 ${age.months}个月 ${age.days}天 ${age.hours}小时 ${age.minutes}分钟`;
 }
 
+const ELEMENT_LABELS = {
+  wood: "木",
+  fire: "火",
+  earth: "土",
+  metal: "金",
+  water: "水",
+} as const;
+
+const RELATION_LABELS = {
+  same: "同类",
+  resource: "资源",
+  drain: "泄",
+  wealth: "财",
+  officer: "官",
+} as const;
+
+const SUPPORT_LABELS = {
+  supportive: "支持较多",
+  balanced: "支持与其他接近",
+  less_supported: "支持较少",
+} as const;
+
+function StrengthSection({
+  snapshot,
+  candidateId,
+}: {
+  snapshot: StoredBaziSnapshot;
+  candidateId: string;
+}) {
+  const strength = snapshot.payload.chart.strength.candidates.find(
+    (item) => item.baziCandidateId === candidateId,
+  );
+  if (!strength) return null;
+  return (
+    <div className="chart-strength-block">
+      <div className="chart-subheading">
+        <h3>旺衰基础量</h3>
+        <span>{strength.status === "complete" ? "四柱" : "三柱部分结果"}</span>
+      </div>
+      <dl className="chart-fact-list chart-strength-facts">
+        <div><dt>日主</dt><dd>{strength.dayMaster.name} · {ELEMENT_LABELS[strength.dayMaster.element]} · {strength.dayMaster.polarity === "yang" ? "阳" : "阴"}</dd></div>
+        <div><dt>月令关系</dt><dd>{strength.monthContext.branchName}（{ELEMENT_LABELS[strength.monthContext.element]}）· {RELATION_LABELS[strength.monthContext.relationToDayMaster]}</dd></div>
+        <div><dt>根气</dt><dd>{strength.root.isRooted ? `有根 · ${strength.root.branchNames.join("、")}` : "未检出同元素藏干根"}</dd></div>
+        <div><dt>支持比例</dt><dd>{Math.round(strength.support.supportRatio * 100)}% · {SUPPORT_LABELS[strength.support.level]}</dd></div>
+      </dl>
+      <div className="strength-table-wrap">
+        <table className="strength-table">
+          <caption>五行透干、藏干与加权分</caption>
+          <thead><tr><th scope="col">元素</th><th scope="col">透干</th><th scope="col">藏干</th><th scope="col">分数</th></tr></thead>
+          <tbody>
+            {strength.distribution.map((item) => (
+              <tr key={item.element}>
+                <th scope="row">{ELEMENT_LABELS[item.element]}</th>
+                <td>{item.visibleStemCount}</td>
+                <td>{item.hiddenStemCount}</td>
+                <td>{item.weightedScore.toFixed(1)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {strength.warnings.length > 0 ? <p className="chart-strength-note"><AlertTriangle aria-hidden="true" size={14} />{strength.warnings[0].message}</p> : null}
+    </div>
+  );
+}
+
 function CandidatePillars({
   candidate,
 }: {
@@ -266,9 +332,12 @@ function ChartView({
           </div>
           <div className="chart-primary-body">
             <CandidatePillars candidate={primary} />
-            <div className="chart-luck-block">
-              <div className="chart-subheading"><h3>大运</h3><span>{luck.status === "complete" ? "确定性结果" : "需结合警告阅读"}</span></div>
-              <LuckSection snapshot={snapshot} candidateId={primary.id} />
+            <div className="chart-side-stack">
+              <div className="chart-luck-block">
+                <div className="chart-subheading"><h3>大运</h3><span>{luck.status === "complete" ? "确定性结果" : "需结合警告阅读"}</span></div>
+                <LuckSection snapshot={snapshot} candidateId={primary.id} />
+              </div>
+              <StrengthSection snapshot={snapshot} candidateId={primary.id} />
             </div>
           </div>
         </section>
@@ -283,7 +352,7 @@ function ChartView({
             {bazi.candidates.slice(1).map((candidate) => (
               <details key={candidate.id} className="chart-candidate-details">
                 <summary><span><strong>{candidateLabel(candidate)}</strong><small>{candidate.timeBasis} · {candidate.timePrecision} · {candidate.dayBoundary}</small></span><ArrowRight aria-hidden="true" size={16} /></summary>
-                <div className="chart-candidate-body"><CandidatePillars candidate={candidate} /><div className="chart-luck-block"><div className="chart-subheading"><h3>对应大运</h3></div><LuckSection snapshot={snapshot} candidateId={candidate.id} /></div></div>
+                <div className="chart-candidate-body"><CandidatePillars candidate={candidate} /><div className="chart-side-stack"><div className="chart-luck-block"><div className="chart-subheading"><h3>对应大运</h3></div><LuckSection snapshot={snapshot} candidateId={candidate.id} /></div><StrengthSection snapshot={snapshot} candidateId={candidate.id} /></div></div>
               </details>
             ))}
           </div>

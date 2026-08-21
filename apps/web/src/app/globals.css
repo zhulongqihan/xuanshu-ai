@@ -1394,6 +1394,13 @@ button:disabled {
   padding-top: 14px;
 }
 
+.chart-side-stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .chart-primary-body > .chart-luck-block {
   border-top: 0;
   padding-top: 0;
@@ -1420,6 +1427,64 @@ button:disabled {
 .chart-luck-facts > div {
   grid-template-columns: 66px minmax(0, 1fr);
   padding-inline: 0;
+}
+
+.chart-strength-block {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.chart-strength-facts > div {
+  grid-template-columns: 66px minmax(0, 1fr);
+  padding-inline: 0;
+}
+
+.strength-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.strength-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  table-layout: fixed;
+}
+
+.strength-table th,
+.strength-table td {
+  border: 1px solid var(--line);
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.strength-table thead th,
+.strength-table tbody th {
+  color: var(--ink-muted);
+  background: var(--surface-subtle);
+  font-weight: 680;
+}
+
+.strength-table caption {
+  margin-bottom: 6px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-align: left;
+}
+
+.chart-strength-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 10px 0 0;
+  color: var(--warning-ink);
+  font-size: 11px;
+}
+
+.chart-strength-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
 }
 
 .chart-inline-status {
