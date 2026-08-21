@@ -28,6 +28,15 @@
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-model-evaluation.ps1
 ```
 
+发布收口时推荐直接运行统一闸门：
+
+```powershell
+pnpm release:check
+```
+
+它会先执行 `pnpm check`，再检查真实模型评测、参考案例闸门和第二台 Windows 验收状态；
+任一外部证据缺失都会以非零退出码结束。
+
 也可以使用下方的分步命令，便于自定义报告路径。
 
 PowerShell：
