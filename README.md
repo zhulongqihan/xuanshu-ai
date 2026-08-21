@@ -72,6 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 - [确定性引擎性能基线](./docs/performance-baseline-20260821.md)
 - [模型评测执行说明](./docs/model-evaluation.md)
 - [M4/M5 参考案例复核契约](./docs/reference-case-review.md)
+- [Windows 发布验收清单](./docs/windows-release-checklist.md)
 - [M2 验收记录](./docs/m2-acceptance.md)
 
 ## 协作方式
