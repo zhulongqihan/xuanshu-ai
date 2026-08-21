@@ -93,4 +93,26 @@ describe("liuyao deterministic calculation", () => {
       expect(result.lines.every((line) => !line.moving), `key-${key}`).toBe(true);
     }
   });
+
+  it("keeps a published S3 example's prose/table discrepancy explicit", () => {
+    // Source: https://github.com/ShousenZHANG/chinese-fortune/blob/main/references/04-liuyao.md
+    // The source is an engineering cross-check only; it is not a traditional-rule authority.
+    const result = calculateLiuyao({
+      schemaVersion: 1,
+      cast: {
+        ...baseCast,
+        castAt: "1903-09-04T12:00:00+08:00",
+        lines: [8, 8, 6, 7, 7, 7],
+      },
+    });
+
+    // The source prose names 火地晋→火山旅, while its line table encodes
+    // 天地否→天山遯. We preserve the table as raw input and do not promote it.
+    expect(result.hexagram.base).toMatchObject({ key: 56, name: "否", palace: { name: "乾宫", position: "三世" } });
+    expect(result.hexagram.changed).toMatchObject({ key: 60, name: "遯" });
+    expect(result.lines.map((line) => line.branch)).toEqual(["未", "巳", "卯", "午", "申", "戌"]);
+    expect(result.lines.map((line) => line.sixRelative)).toEqual(["父母", "官鬼", "妻财", "官鬼", "兄弟", "父母"]);
+    expect(result.lines.filter((line) => line.moving).map((line) => line.position)).toEqual([3]);
+    expect(result.context).toMatchObject({ localDate: "1903-09-04", monthBranch: "申", day: { name: "乙未" } });
+  });
 });

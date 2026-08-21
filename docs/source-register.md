@@ -1,7 +1,7 @@
 # 资料来源注册表
 
 状态：持续维护
-更新日期：2026-07-21
+更新日期：2026-08-22
 
 ## 来源等级
 
@@ -32,6 +32,7 @@
 | `bushi-zhengzong` | S1 | 《卜筮正宗》 | 六爻纳甲和断法来源 |
 | `huozhulin` | S1 | 《火珠林》 | 纳甲筮法历史基础 |
 | `iztro` | S3 | `iztro@2.5.8` 固定版本开源实现 | 紫微三合基础盘工程适配与交叉验证；不单独承担传统规则权威性 |
+| `chinese-fortune-liuyao` | S3 | [chinese-fortune 六爻参考文档](https://github.com/ShousenZHANG/chinese-fortune/blob/main/references/04-liuyao.md)，案例一 | 六爻装卦、动爻变卦和纳甲的工程交叉验证；不单独承担传统规则权威性，案例状态仍为 candidate |
 
 古籍初始电子文本可从维基文库检索。正式引用时必须记录具体版本、卷次和章节，
 不能只记录搜索页面或作品名。
