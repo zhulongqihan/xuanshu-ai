@@ -113,18 +113,23 @@ describe("bazi luck direction and cycles", () => {
     expectedChart.setSect(2);
     const expected = expectedChart.getYun(gender, 2);
 
-    expect(result.candidates[0].direction === "forward").toBe(expected.isForward());
+    const candidate = result.candidates[0];
+    expect(candidate).toBeDefined();
+    if (!candidate) throw new Error("缺少大运候选");
+    expect(candidate.direction === "forward").toBe(expected.isForward());
     const referenceAge = {
       years: expected.getStartYear(),
       months: expected.getStartMonth(),
       days: expected.getStartDay(),
       hours: expected.getStartHour(),
     };
-    const actualAge = result.candidates[0].startAge;
+    const actualAge = candidate.startAge;
+    expect(actualAge).toBeDefined();
+    if (!actualAge) throw new Error("精确时间候选缺少起运年龄");
     expect(Math.abs(symbolicAgeSeconds(actualAge) - symbolicAgeSeconds(referenceAge)))
       .toBeLessThanOrEqual(60);
     expect(symbolicAgeSeconds(actualAge)).toBe(actualAge.distanceSeconds);
-    expect(result.candidates[0].cycles.map((cycle) => cycle.name)).toEqual(
+    expect(candidate.cycles.map((cycle) => cycle.name)).toEqual(
       expected.getDaYun(5).slice(1).map((cycle) => cycle.getGanZhi()),
     );
   });
@@ -151,10 +156,15 @@ describe("bazi luck boundaries and validation", () => {
       direction: "backward",
       referenceJie: { id: "solar_term_lichun", name: "立春" },
     });
-    expect(before.candidates[0].startAge.distanceSeconds).toBeGreaterThan(0);
-    expect(after.candidates[0].startAge.distanceSeconds).toBeGreaterThan(0);
-    expect(before.candidates[0].startAge.distanceSeconds).toBeLessThan(120);
-    expect(after.candidates[0].startAge.distanceSeconds).toBeLessThan(120);
+    const beforeAge = before.candidates[0]?.startAge;
+    const afterAge = after.candidates[0]?.startAge;
+    expect(beforeAge).toBeDefined();
+    expect(afterAge).toBeDefined();
+    if (!beforeAge || !afterAge) throw new Error("边界测试缺少精确起运年龄");
+    expect(beforeAge.distanceSeconds).toBeGreaterThan(0);
+    expect(afterAge.distanceSeconds).toBeGreaterThan(0);
+    expect(beforeAge.distanceSeconds).toBeLessThan(120);
+    expect(afterAge.distanceSeconds).toBeLessThan(120);
   });
 
   it("preserves both DST folds and their distinct physical distances", () => {
@@ -172,12 +182,13 @@ describe("bazi luck boundaries and validation", () => {
     expect(result.status).toBe("complete");
     expect(result.candidates).toHaveLength(2);
     const distances = result.candidates
-      .map((candidate) => candidate.startAge.distanceSeconds)
+      .map((candidate) => candidate.startAge?.distanceSeconds)
+      .filter((distance): distance is number => distance !== undefined)
       .sort((left, right) => left - right);
     expect(distances[1] - distances[0]).toBe(3_600);
   });
 
-  it("does not invent a single start point for approximate or unknown time", () => {
+  it("keeps an approximate start-age and transit range, while unknown stays unavailable", () => {
     const approximate = luck(birth({
       time: {
         kind: "approximate",
@@ -188,13 +199,23 @@ describe("bazi luck boundaries and validation", () => {
     }));
     const unknown = luck(birth({ time: { kind: "unknown" } }));
 
-    for (const result of [approximate, unknown]) {
-      expect(result.status).toBe("unavailable");
-      expect(result.candidates).toEqual([]);
-      expect(result.warnings).toHaveLength(1);
-      expect(result.warnings[0].code).toBe("exact_birth_time_required");
-      expect(result.warnings[0].baziCandidateIds.length).toBeGreaterThan(0);
-    }
+    expect(approximate.status).toBe("complete");
+    expect(approximate.candidates.length).toBeGreaterThan(0);
+    expect(approximate.candidates.every((candidate) =>
+      candidate.startAge === undefined &&
+      candidate.startAgeRange !== undefined &&
+      candidate.transit === undefined &&
+      candidate.transitRange !== undefined,
+    )).toBe(true);
+    expect(approximate.warnings).toContainEqual(expect.objectContaining({
+      code: "approximate_start_age_range",
+    }));
+
+    expect(unknown.status).toBe("unavailable");
+    expect(unknown.candidates).toEqual([]);
+    expect(unknown.warnings).toContainEqual(expect.objectContaining({
+      code: "unknown_birth_time_no_start_point",
+    }));
   });
 
   it("explains an unavailable source chart", () => {
