@@ -2267,6 +2267,132 @@ button:disabled {
   }
 }
 
+.ziwei-view {
+  display: grid;
+  gap: 18px;
+}
+
+.ziwei-facts {
+  padding-bottom: 20px;
+}
+
+.ziwei-palace-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0 20px 20px;
+  list-style: none;
+}
+
+.ziwei-palace-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  padding: 13px;
+}
+
+.ziwei-body-palace {
+  border-color: var(--primary);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.ziwei-palace-heading,
+.ziwei-star-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ziwei-palace-heading {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.ziwei-palace-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ziwei-palace-heading small,
+.ziwei-star-group > small,
+.ziwei-palace-heading span {
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.ziwei-palace-heading span {
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+  padding: 3px 6px;
+  white-space: nowrap;
+}
+
+.ziwei-star-group {
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+.ziwei-star-group > small {
+  flex: 0 0 30px;
+}
+
+.ziwei-star-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ziwei-star-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 2px 5px;
+  font-size: 11px;
+}
+
+.ziwei-star-list small {
+  color: var(--ink-muted);
+  font-size: 9px;
+}
+
+.ziwei-empty-stars,
+.ziwei-star-group p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .ziwei-palace-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .ziwei-palace-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding-inline: 15px;
+  }
+
+  .ziwei-palace-card {
+    padding: 10px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

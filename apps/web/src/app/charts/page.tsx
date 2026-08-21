@@ -244,6 +244,9 @@ function ProfileSelector({
         <Link className="secondary-button button-with-icon" href="/profiles">
           管理档案 <ArrowRight aria-hidden="true" size={15} />
         </Link>
+        <Link className="secondary-button" href={selectedId ? `/ziwei?profileId=${selectedId}` : "/ziwei"}>
+          打开紫微盘
+        </Link>
       </div>
       {profiles.length > 0 ? (
         <ul className="chart-profile-list">
