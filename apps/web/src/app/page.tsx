@@ -6,6 +6,7 @@ import {
   MessageCircleMore,
   Sparkles,
 } from "lucide-react";
+import { loadAppConfig } from "@xuanshu/agent";
 import Link from "next/link";
 import { connection } from "next/server";
 import { PageHeader } from "@/components/page-header";
@@ -39,20 +40,29 @@ const workbenchItems = [
 ];
 
 const systems = [
-  ["八字", "排盘引擎待接入"],
-  ["紫微斗数", "排盘引擎待接入"],
-  ["老黄历", "历法引擎待接入"],
-  ["六爻", "起卦引擎待接入"],
-];
+  ["八字", "已接入 · 子平规则 1.0.0"],
+  ["紫微斗数", "已接入 · 三合基础盘 1.0.0"],
+  ["老黄历", "已接入 · 协纪辨方书 1.1.0"],
+  ["六爻", "已接入 · 文王卦 1.0.0"],
+] as const;
 
 export default async function Home() {
   await connection();
   const now = new Date();
   let profileCount = 0;
+  let modelConfigured = false;
   try {
     profileCount = listStoredProfiles().length;
   } catch {
     // The health and settings surfaces expose database failures in detail.
+  }
+  try {
+    const modelConfig = await loadAppConfig();
+    modelConfigured = Boolean(
+      process.env[modelConfig.config.provider.api_key_env]?.trim(),
+    );
+  } catch {
+    // The settings surface exposes configuration failures in detail.
   }
   const dateLabel = new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Shanghai",
@@ -69,7 +79,7 @@ export default async function Home() {
       <section className="today-band" aria-label="当前状态">
         <div>
           <span className="today-band-label">历法</span>
-          <strong>等待历法引擎</strong>
+          <strong>离线历法已就绪</strong>
         </div>
         <div>
           <span className="today-band-label">人物档案</span>
@@ -77,7 +87,7 @@ export default async function Home() {
         </div>
         <div>
           <span className="today-band-label">模型</span>
-          <strong>尚未配置</strong>
+          <strong>{modelConfigured ? "模型已配置" : "尚未配置"}</strong>
         </div>
         <Link className="text-link" href="/settings">
           检查设置
@@ -119,7 +129,7 @@ export default async function Home() {
               <div key={name}>
                 <dt>{name}</dt>
                 <dd>
-                  <span className="pending-dot" aria-hidden="true" />
+                  <span className="ready-dot" aria-hidden="true" />
                   {status}
                 </dd>
               </div>

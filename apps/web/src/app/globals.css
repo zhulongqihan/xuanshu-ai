@@ -178,7 +178,8 @@ textarea:focus-visible {
 }
 
 .status-dot,
-.pending-dot {
+.pending-dot,
+.ready-dot {
   flex: 0 0 auto;
   border-radius: 50%;
 }
@@ -482,6 +483,12 @@ textarea:focus-visible {
   width: 7px;
   height: 7px;
   background: var(--warning);
+}
+
+.ready-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--success);
 }
 
 .empty-inline {
