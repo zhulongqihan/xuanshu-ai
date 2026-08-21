@@ -1,0 +1,95 @@
+[
+  {
+    "schemaVersion": 1,
+    "id": "example.ziwei-candidate",
+    "system": "ziwei",
+    "status": "candidate",
+    "ruleSetId": "ziwei-sanhe-v1",
+    "ruleSetVersion": "1.0.0",
+    "privacy": {
+      "containsPersonalData": false
+    },
+    "input": {
+      "schemaVersion": 1,
+      "calendarDate": {
+        "kind": "solar",
+        "date": "1990-05-18"
+      },
+      "time": {
+        "kind": "exact",
+        "value": "12:00"
+      },
+      "chartSex": "male",
+      "location": {
+        "label": "示例城市",
+        "timeZoneId": "Asia/Shanghai",
+        "timeZoneSource": "manual",
+        "timeZoneConfirmed": true,
+        "coordinates": {
+          "latitude": 31.2304,
+          "longitude": 121.4737
+        }
+      },
+      "trueSolarTimeMode": "civil_only"
+    },
+    "provenance": {
+      "sourceId": "replace-with-registered-source",
+      "sourceTier": "S3",
+      "edition": "replace-with-fixed-edition-or-commit",
+      "locator": "replace-with-page-section-or-commit-path",
+      "inputDerivation": "transcribed",
+      "notes": "示例模板；填充前不得计入黄金集。"
+    },
+    "assertions": [
+      {
+        "path": "candidates[0].earthlyBranchOfSoulPalace",
+        "expected": "replace-with-source-result",
+        "comparison": "manual",
+        "notes": "逐字段记录外部结果和差异。"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "id": "example.liuyao-candidate",
+    "system": "liuyao",
+    "status": "candidate",
+    "ruleSetId": "liuyao-wenwanggua-v1",
+    "ruleSetVersion": "1.0.0",
+    "privacy": {
+      "containsPersonalData": false
+    },
+    "input": {
+      "question": "示例问题，仅用于模板演示",
+      "method": "manual_lines",
+      "lineOrder": "bottom_to_top",
+      "lines": [
+        7,
+        8,
+        7,
+        8,
+        7,
+        8
+      ],
+      "castAt": "2024-01-01T12:00:00+08:00",
+      "timeZone": "Asia/Shanghai",
+      "locationName": "示例城市"
+    },
+    "provenance": {
+      "sourceId": "replace-with-registered-source",
+      "sourceTier": "S3",
+      "edition": "replace-with-fixed-edition-or-commit",
+      "locator": "replace-with-page-section-or-commit-path",
+      "inputDerivation": "transcribed",
+      "notes": "示例模板；填充前不得计入黄金集。"
+    },
+    "assertions": [
+      {
+        "path": "hexagram.base.name",
+        "expected": "replace-with-source-result",
+        "comparison": "manual",
+        "notes": "同时记录原始爻值、装卦字段和流派差异。"
+      }
+    ]
+  }
+]

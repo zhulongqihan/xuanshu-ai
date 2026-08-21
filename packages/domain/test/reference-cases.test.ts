@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import {
   countReviewedReferenceCases,
@@ -38,6 +39,15 @@ const candidate = {
 };
 
 describe("reference case contract", () => {
+  it("keeps the committed reference template schema-valid without gold cases", async () => {
+    const templatePath = new URL("../../../docs/reference-case-template.json", import.meta.url);
+    const parsed: unknown = JSON.parse(await readFile(templatePath, "utf8"));
+    const cases = validateReferenceCaseSet(Array.isArray(parsed) ? parsed : []);
+    expect(cases).toHaveLength(2);
+    expect(cases.every((item) => item.status === "candidate")).toBe(true);
+    expect(countReviewedReferenceCases(cases)).toEqual({ ziwei: 0, liuyao: 0 });
+  });
+
   it("accepts a privacy-safe candidate and reports reviewed counts", () => {
     const cases = validateReferenceCaseSet([candidate]);
     expect(cases).toHaveLength(1);
