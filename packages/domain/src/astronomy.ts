@@ -56,7 +56,7 @@ const SOLAR_TERMS = [
   ["dongzhi", "冬至", 270, 0],
 ] as const;
 
-type SolarTermInstant = {
+export type SolarTermInstant = {
   id: string;
   name: string;
   kind: "jie" | "zhongqi";
