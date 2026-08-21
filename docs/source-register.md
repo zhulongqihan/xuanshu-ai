@@ -3,7 +3,7 @@
 状态：持续维护
 更新日期：2026-08-22
 
-当前状态：六爻已登记三个固定/可定位的 S3 工程交叉验证来源；它们仅用于工程比对，不升级为传统规则权威或黄金案例。本轮 Windows 启停脚本和模型评测启动器验收未改变来源等级和使用边界。
+当前状态：六爻已登记四个固定/可定位的 S3 工程交叉验证来源，其中一个同时包含紫微与六爻案例页；它们仅用于工程比对和后续人工复核入口，不升级为传统规则权威或黄金案例。本轮检索未改变黄金案例计数。
 
 ## 来源等级
 
@@ -37,6 +37,7 @@
 | `chinese-fortune-liuyao` | S3 | [chinese-fortune 六爻参考文档](https://github.com/ShousenZHANG/chinese-fortune/blob/main/references/04-liuyao.md)，案例一 | 六爻装卦、动爻变卦和纳甲的工程交叉验证；不单独承担传统规则权威性，案例状态仍为 candidate |
 | `yaomancy-liuyao-engine` | S3 | [liuyao-engine](https://github.com/yaomancy/liuyao-engine)，固定提交 `5329166`；Apache-2.0，附带参考数据和第三方许可见其 `NOTICE` | 六爻装卦、纳甲、六亲、六神、世应、伏神和历法边界的工程交叉验证；其 5 个锚点案例文件明确为 draft，不计入黄金集，也不单独承担传统规则权威性 |
 | `johnson-jia-liuyao` | S3 | [liuyao-divination](https://github.com/Johnson-Jia/liuyao-divination)，固定提交 `1a5a78b`；MIT | 六爻装卦和经典卦例机械交叉验证；实际仓库含 2 个 JSON 示例及测试，案例包含解读文本，未经过本项目逐字段人工复核，不计入黄金集 |
+| `tianjiyao-wiki-cases` | S3 | [tianjiyao-wiki](https://github.com/wych1987/tianjiyao-wiki)，固定提交 `af36dfd1c85aaaa8a853d7d766e7dabbe6823367`；MIT；[紫微案例页](https://github.com/wych1987/tianjiyao-wiki/blob/af36dfd1c85aaaa8a853d7d766e7dabbe6823367/docs/practice/case-studies.md)、[六爻实战案例页](https://github.com/wych1987/tianjiyao-wiki/blob/af36dfd1c85aaaa8a853d7d766e7dabbe6823367/docs/yijing/practical-cases.md) | 为紫微与六爻提供少量公开案例复核入口；页面明确存在案例索引，但字段覆盖不完整、部分内容按篇幅省略，必须逐案补齐输入/输出/流派和复核记录，当前不计入黄金集 |
 
 古籍初始电子文本可从维基文库检索。正式引用时必须记录具体版本、卷次和章节，
 不能只记录搜索页面或作品名。
