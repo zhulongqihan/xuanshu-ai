@@ -4,7 +4,8 @@ param()
 $ErrorActionPreference = "Stop"
 $scriptFiles = @(
     (Join-Path $PSScriptRoot "start-windows.ps1"),
-    (Join-Path $PSScriptRoot "install-windows.ps1")
+    (Join-Path $PSScriptRoot "install-windows.ps1"),
+    (Join-Path $PSScriptRoot "stop-windows.ps1")
 )
 $hasErrors = $false
 

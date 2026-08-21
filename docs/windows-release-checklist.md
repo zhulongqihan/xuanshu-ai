@@ -15,6 +15,7 @@
 - `pnpm --filter @xuanshu/web start` 成功；
 - `scripts/install-windows.ps1` 在隔离目标目录成功创建快捷方式，目标、参数和工作目录均指向该提交的启动脚本与仓库；
 - `scripts/start-windows.ps1 -NoBrowser` 使用专用 `XUANSHU_AI_DATA_DIR` 成功启动，日志目录和数据库目录已创建；
+- `scripts/stop-windows.ps1` 会校验端口进程命令行，只停止玄枢生产服务；隔离验收中已验证停止后端口释放；
 - `/api/health` 返回 `status=ok`；
 - `/`、`/almanac`、`/charts`、`/consult`、`/liuyao`、`/profiles`、`/settings`、`/sources`、`/ziwei` 均返回 200；
 - 监听地址确认为 `127.0.0.1:3000`；
@@ -32,7 +33,7 @@
 5. 运行 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1`；
 6. 从桌面快捷方式打开应用，确认只监听 `127.0.0.1`、健康检查成功、浏览器能打开工作台；
 7. 创建测试档案，验证四术工作区、备份下载、恢复和清空；
-8. 关闭应用并确认启动脚本留下的进程和 3000 端口均已清理；
+8. 运行 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-windows.ps1`，确认启动脚本留下的进程和 3000 端口均已清理；
 9. 删除测试数据和测试备份，不把任何个人资料或密钥带入提交。
 
 未完成以上另一台机器步骤前，发布状态只能写成“候选发布”，不能写成“已完成 Windows 发布验收”。

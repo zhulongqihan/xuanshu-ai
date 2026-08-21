@@ -62,6 +62,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 `127.0.0.1` 的服务并打开浏览器。运行日志默认保存在 `%LOCALAPPDATA%\XuanshuAI\logs`；
 设置 `XUANSHU_AI_DATA_DIR` 后，数据库和日志会统一写入该目录。
 
+关闭本地服务时运行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-windows.ps1
+```
+
+停止脚本只会处理命令行明确指向玄枢生产 `server.js` 的 3000 端口进程，遇到其他本地服务会拒绝停止。
+
 ## 项目文档
 
 - [架构决策](./docs/architecture.md)
