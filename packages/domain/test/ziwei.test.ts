@@ -22,6 +22,16 @@ function birthInput(time: { kind: "exact" | "approximate" | "unknown"; value?: s
   };
 }
 
+function engineeringBirth(index: number) {
+  const date = new Date(Date.UTC(1988, 0, 1 + index)).toISOString().slice(0, 10);
+  const hour = String((index % 12) * 2).padStart(2, "0");
+  return {
+    ...birthInput({ kind: "exact", value: `${hour}:00` }),
+    calendarDate: { kind: "solar" as const, date },
+    chartSex: index % 2 === 0 ? "male" as const : "female" as const,
+  };
+}
+
 describe("ziwei calculation", () => {
   it("generates a versioned twelve-palace chart from the normalized birth record", () => {
     const normalized = normalizeBirth(birthInput());
@@ -53,5 +63,17 @@ describe("ziwei calculation", () => {
     expect(result.status).toBe("unavailable");
     expect(result.candidates).toHaveLength(0);
     expect(result.warnings[0]).toContain("需要可定位的出生时辰");
+  });
+
+  it("keeps 100 engineering regression charts structurally stable", () => {
+    for (let index = 0; index < 100; index += 1) {
+      const normalized = normalizeBirth(engineeringBirth(index));
+      const result = calculateZiwei({ schemaVersion: 1, normalized });
+      expect(result.status, `case-${index}`).toBe("complete");
+      expect(result.candidates, `case-${index}`).toHaveLength(1);
+      expect(result.candidates[0]?.palaces, `case-${index}`).toHaveLength(12);
+      expect(result.candidates[0]?.palaces.every((palace) => palace.name.length > 0), `case-${index}`).toBe(true);
+      expect(result.candidates[0]?.palaces.some((palace) => palace.majorStars.length > 0), `case-${index}`).toBe(true);
+    }
   });
 });

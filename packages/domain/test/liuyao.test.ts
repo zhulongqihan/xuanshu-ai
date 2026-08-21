@@ -79,4 +79,18 @@ describe("liuyao deterministic calculation", () => {
       },
     })).toThrow("硬币原始记录与爻值不一致");
   });
+
+  it("maps all 64 static hexagrams without falling back to an unknown name", () => {
+    for (let key = 0; key < 64; key += 1) {
+      const lines = Array.from({ length: 6 }, (_, index) => ((key >> index) & 1) === 1 ? 7 : 8) as [7, 7, 7, 7, 7, 7];
+      const result = calculateLiuyao({
+        schemaVersion: 1,
+        cast: { ...baseCast, lines },
+      });
+      expect(result.hexagram.base.key, `key-${key}`).toBe(key);
+      expect(result.hexagram.changed.key, `key-${key}`).toBe(key);
+      expect(result.hexagram.base.name, `key-${key}`).not.toMatch(/^卦/);
+      expect(result.lines.every((line) => !line.moving), `key-${key}`).toBe(true);
+    }
+  });
 });
