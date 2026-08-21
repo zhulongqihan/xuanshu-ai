@@ -243,6 +243,102 @@ export function createProfileRepository(
       });
     },
 
+    update(profileId: string, input: CreateProfileInput) {
+      const displayName = normalizeDisplayName(input.displayName);
+      const rawInput = rawBirthInputSchema.parse(input.birthInput);
+      const updatedAt = now();
+      const normalized = normalizeBirth(rawInput, { normalizedAt: updatedAt });
+      const currentRow = currentProfileQuery.where(eq(profiles.id, profileId)).get();
+      if (!currentRow) {
+        return undefined;
+      }
+      const current = parseStoredProfile(currentRow);
+
+      if (current.birthRecord.inputHash === normalized.inputHash) {
+        db.update(profiles)
+          .set({ displayName, updatedAt })
+          .where(eq(profiles.id, profileId))
+          .run();
+        const refreshed = currentProfileQuery.where(eq(profiles.id, profileId)).get();
+        if (!refreshed) {
+          throw new Error(`档案更新后无法读取：${profileId}`);
+        }
+        return parseStoredProfile(refreshed);
+      }
+
+      const latestRevision = db
+        .select({ revision: profileBirthRecords.revision })
+        .from(profileBirthRecords)
+        .where(eq(profileBirthRecords.profileId, profileId))
+        .orderBy(desc(profileBirthRecords.revision))
+        .limit(1)
+        .get()?.revision;
+      if (latestRevision === undefined) {
+        throw new StoredProfileCorruptionError(`档案 ${profileId} 缺少出生记录`);
+      }
+
+      const birthRecordId = createId();
+      const coordinates = rawInput.location.coordinates;
+      db.transaction((transaction) => {
+        transaction
+          .update(profileBirthRecords)
+          .set({ isCurrent: false })
+          .where(
+            and(
+              eq(profileBirthRecords.profileId, profileId),
+              eq(profileBirthRecords.isCurrent, true),
+            ),
+          )
+          .run();
+        transaction
+          .insert(profileBirthRecords)
+          .values({
+            id: birthRecordId,
+            profileId,
+            revision: latestRevision + 1,
+            isCurrent: true,
+            rawInputJson: JSON.stringify(rawInput),
+            canonicalInputJson: JSON.stringify(normalized.canonicalInput),
+            inputHash: normalized.inputHash,
+            inputSchemaVersion: rawInput.schemaVersion,
+            normalizedJson: JSON.stringify(normalized),
+            normalizedSchemaVersion: normalized.schemaVersion,
+            normalizerVersion: normalized.provenance.normalizer.version,
+            dependenciesJson: JSON.stringify(normalized.provenance.dependencies),
+            sourceRefsJson: JSON.stringify(normalized.provenance.sourceIds),
+            warningsJson: JSON.stringify(normalized.warnings),
+            createdAt: updatedAt,
+          })
+          .run();
+        transaction
+          .update(profiles)
+          .set({
+            displayName,
+            calendarType: rawInput.calendarDate.kind,
+            birthDate: legacyBirthDate(rawInput),
+            birthTime: rawInput.time.kind === "unknown" ? "unknown" : rawInput.time.value,
+            isLeapMonth:
+              rawInput.calendarDate.kind === "lunar" &&
+              rawInput.calendarDate.isLeapMonth,
+            chartSex: rawInput.chartSex,
+            locationName: rawInput.location.label,
+            latitude: coordinates?.latitude,
+            longitude: coordinates?.longitude,
+            timeZone: rawInput.location.timeZoneId,
+            uncertaintyMinutes: legacyUncertaintyMinutes(rawInput),
+            updatedAt,
+          })
+          .where(eq(profiles.id, profileId))
+          .run();
+      });
+
+      const refreshed = currentProfileQuery.where(eq(profiles.id, profileId)).get();
+      if (!refreshed) {
+        throw new Error(`档案更新后无法读取：${profileId}`);
+      }
+      return parseStoredProfile(refreshed);
+    },
+
     list() {
       return currentProfileQuery
         .orderBy(desc(profiles.updatedAt), desc(profiles.id))

@@ -22,6 +22,10 @@ export function createStoredProfile(input: CreateProfileInput) {
   return withProfileRepository((repository) => repository.create(input));
 }
 
+export function updateStoredProfile(profileId: string, input: CreateProfileInput) {
+  return withProfileRepository((repository) => repository.update(profileId, input));
+}
+
 export function deleteStoredProfile(profileId: string) {
   return withProfileRepository((repository) => repository.delete(profileId));
 }

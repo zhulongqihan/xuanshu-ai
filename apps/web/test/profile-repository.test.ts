@@ -44,7 +44,7 @@ async function createTestRepository() {
     directory,
     migrationsFolder: join(process.cwd(), "drizzle"),
   });
-  const ids = ["profile-1", "birth-record-1"];
+  const ids = ["profile-1", "birth-record-1", "birth-record-2"];
   const repository = createProfileRepository(database.db, {
     createId: () => ids.shift() ?? "unexpected-id",
     now: () => "2026-07-19T22:00:00+08:00",
@@ -86,6 +86,42 @@ describe("profile repository", () => {
     expect(
       sqlite.prepare("SELECT COUNT(*) FROM profile_birth_records").pluck().get(),
     ).toBe(1);
+    sqlite.close();
+  });
+
+  it("creates an immutable birth revision when the birth input changes", async () => {
+    const { repository, sqlite } = await createTestRepository();
+    const created = repository.create({
+      displayName: "修订前",
+      birthInput: birthInput(),
+    });
+
+    const updated = repository.update("profile-1", {
+      displayName: "修订后",
+      birthInput: {
+        ...birthInput(),
+        time: { kind: "exact", value: "12:00" },
+      },
+    });
+
+    expect(updated).toMatchObject({
+      id: "profile-1",
+      displayName: "修订后",
+      birthRecord: {
+        id: "birth-record-2",
+        revision: 2,
+      },
+    });
+    expect(updated?.birthRecord.inputHash).not.toBe(created.birthRecord.inputHash);
+    expect(
+      sqlite.prepare(
+        "SELECT revision, is_current FROM profile_birth_records ORDER BY revision",
+      ).all(),
+    ).toEqual([
+      { revision: 1, is_current: 0 },
+      { revision: 2, is_current: 1 },
+    ]);
+    expect(repository.get("profile-1")).toEqual(updated);
     sqlite.close();
   });
 
