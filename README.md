@@ -13,8 +13,9 @@
 
 项目已完成 M0-M5 的首个可用纵向交付：本地 Web 应用、SQLite 数据层、Windows 启动器、
 1901-2100 年离线历法、可追溯人物档案、八字/大运与紫微首版盘面、黄历事项筛查、六爻问事工作区，
-以及首个带事实和证据边界的咨询流程。M6 已完成确定性路由和按需 facts 组装，M7 已完成本地
-JSON 备份、恢复、清空和设置页入口；当前正在进行真实模型评测、无障碍/安全审查与 Windows 发布验收。
+以及首个带事实和证据边界的咨询流程。M6 已完成确定性路由、按需 facts、证据归属和高风险安全边界，
+并建立了 200 条中文固定评测集；M7 已完成本地 JSON 备份、恢复、清空和设置页入口。代码侧无障碍、
+安全、依赖和性能基线已完成，当前剩余真实模型评测、独立参考案例复核和干净 Windows 发布验收。
 
 ## 本地运行
 
@@ -69,6 +70,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 - [M7 本地数据管理决策](./docs/m7-data-decision.md)
 - [安全审查记录](./docs/security-audit-20260821.md)
 - [确定性引擎性能基线](./docs/performance-baseline-20260821.md)
+- [模型评测执行说明](./docs/model-evaluation.md)
+- [M4/M5 参考案例复核契约](./docs/reference-case-review.md)
 - [M2 验收记录](./docs/m2-acceptance.md)
 
 ## 协作方式

@@ -1,6 +1,6 @@
 # 玄枢 AI 安全审查记录
 
-审查日期：2026-08-21
+审查日期：2026-08-22
 审查范围：Next.js 16.3.2 / React 19 / TypeScript，本地 Web、Server Actions、备份接口、模型适配层、Windows 启动器。
 结论：代码侧未发现已确认的高危 XSS、动态执行、密钥泄露或 SQL 注入；已补齐基础响应头。应用的安全前提是默认只监听本机回环地址，尚未设计公网多用户认证。
 
@@ -39,6 +39,13 @@
 - 严重性：High，未发现问题。
 - 证据：[apps/web/src/server/data/core.ts](../apps/web/src/server/data/core.ts):22-29 的表名和列名来自固定常量，不来自用户输入；备份字段通过白名单校验后才进入参数化 `INSERT` 值位。
 
+### SEC-07：模型 claim 的证据归属与高风险边界
+
+- 严重性：High，已修复。
+- 位置：[packages/agent/src/consult.ts](../packages/agent/src/consult.ts) 的 `validateConsultationModelResponse`。
+- 证据：每条 claim 的规则 ID 必须来自当前 facts；claim 标注的术数必须拥有对应证据；单术数问题不能保存综合 claim；有可用 facts 时不能保存零引用回答；高风险路由必须带安全提醒，并禁止把命中高风险主题的传统规则判断保存为确定性或规则确定性结论。
+- 验证：Agent 咨询测试、200 条固定路由/安全评测集和真实模型评测器的协议校验。
+
 ## 已接受的本地模式边界
 
 ### SEC-06：无认证的本地接口
@@ -52,7 +59,7 @@
 ## 发布前仍需外部证据
 
 - 官方 registry 的 `pnpm audit --prod --registry=https://registry.npmjs.org/` 已通过，结果为 `No known vulnerabilities found`；仓库默认镜像不提供 audit endpoint，不能用默认源替代该结果。
-- 真实模型配置下验证超时、429/5xx、结构化输出失败和中转站留存策略。
+- 真实模型配置下验证 200 条中文问题、超时、429/5xx、结构化输出失败和中转站留存策略；执行说明见 [模型评测执行说明](./model-evaluation.md)。
 - 干净 Windows 环境验证首次依赖安装、升级和桌面快捷方式启动。
 
 ## 审查门槛
