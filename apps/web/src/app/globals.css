@@ -2075,6 +2075,7 @@ button:disabled {
 }
 
 .consult-profile-form select,
+.consult-form input,
 .consult-form textarea {
   width: 100%;
   border: 1px solid var(--line-strong);
@@ -2099,6 +2100,12 @@ button:disabled {
   resize: vertical;
 }
 
+.consult-form input[type="date"] {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.consult-form input:focus,
 .consult-form textarea:focus,
 .consult-profile-form select:focus {
   border-color: var(--primary);

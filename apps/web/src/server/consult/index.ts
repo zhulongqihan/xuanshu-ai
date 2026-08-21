@@ -6,7 +6,14 @@ export type {
   StoredConsultation,
   StoredConsultationMessage,
 } from "./core";
-export { buildBaziConsultationFacts } from "./facts";
+export {
+  buildAlmanacConsultationSystem,
+  buildBaziConsultationFacts,
+  buildConsultationFacts,
+  buildLiuyaoConsultationSystem,
+  buildUnavailableConsultationSystem,
+  buildZiweiConsultationSystem,
+} from "./facts";
 export {
   appendStoredMessage,
   createStoredConsultation,

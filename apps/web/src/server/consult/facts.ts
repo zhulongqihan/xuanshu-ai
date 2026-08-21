@@ -1,8 +1,12 @@
 import {
   consultationFactsSchema,
+  type RouteDecision,
   type ConsultationFacts,
 } from "@xuanshu/agent";
+import type { AlmanacCalculation } from "@xuanshu/domain";
 import type { StoredBaziSnapshot } from "../charts/core";
+import type { StoredLiuyaoCase } from "../liuyao/core";
+import type { StoredZiweiSnapshot } from "../ziwei/core";
 
 const ELEMENT_LABELS = {
   wood: "木",
@@ -70,4 +74,80 @@ export function buildBaziConsultationFacts(snapshot: StoredBaziSnapshot): Consul
       evidenceRuleIds,
     }],
   });
+}
+
+export function buildZiweiConsultationSystem(snapshot: StoredZiweiSnapshot): ConsultationFacts["systems"][number] {
+  const chart = snapshot.payload.chart.ziwei;
+  const candidate = chart.candidates[0];
+  if (!candidate) {
+    return {
+      system: "ziwei",
+      status: chart.status,
+      facts: [...chart.warnings, "当前紫微记录没有可用候选盘"],
+      evidenceRuleIds: chart.evidence.map((item) => item.ruleId),
+    };
+  }
+  const palaceFacts = candidate.palaces.map((palace) => {
+    const stars = palace.majorStars.map((star) => star.name).join("、") || "无主星记录";
+    return `${palace.name}：${stars}${palace.isBodyPalace ? " · 身宫" : ""}${palace.isOriginalPalace ? " · 命宫" : ""}`;
+  });
+  return {
+    system: "ziwei",
+    status: chart.status,
+    facts: [
+      `历法日期：${candidate.chineseDate}`,
+      `命宫地支：${candidate.earthlyBranchOfSoulPalace} · 身宫地支：${candidate.earthlyBranchOfBodyPalace}`,
+      `命主：${candidate.soul} · 身主：${candidate.body} · 五行局：${candidate.fiveElementsClass}`,
+      ...palaceFacts,
+      ...candidate.warnings,
+    ],
+    evidenceRuleIds: chart.evidence.map((item) => item.ruleId),
+  };
+}
+
+export function buildLiuyaoConsultationSystem(item: StoredLiuyaoCase): ConsultationFacts["systems"][number] {
+  const calculation = item.calculation;
+  return {
+    system: "liuyao",
+    status: calculation.status,
+    facts: [
+      `本卦：${calculation.hexagram.base.name} · ${calculation.hexagram.base.palace.name}`,
+      `变卦：${calculation.hexagram.changed.name} · ${calculation.hexagram.changed.palace.name}`,
+      `起卦日期：${calculation.context.localDate} · ${calculation.context.day.name}`,
+      `月建：${calculation.context.monthBranch} · 旬空：${calculation.context.xunKong.join("、")}`,
+      ...calculation.lines.map((line) => `${line.position}爻：${line.stem}${line.branch} · ${line.sixRelative} · ${line.sixSpirit}${line.moving ? " · 动" : ""}${line.isShi ? " · 世" : ""}${line.isYing ? " · 应" : ""}${line.isVoid ? " · 空" : ""}`),
+      ...calculation.warnings,
+    ],
+    evidenceRuleIds: calculation.evidence.map((item) => item.ruleId),
+  };
+}
+
+export function buildAlmanacConsultationSystem(result: AlmanacCalculation): ConsultationFacts["systems"][number] {
+  return {
+    system: "almanac",
+    status: result.status,
+    facts: [
+      `公历：${result.input.solarDate} · 时区 ${result.input.timeZoneId}`,
+      `农历：${result.lunar.year}年${result.lunar.isLeapMonth ? "闰" : ""}${result.lunar.month}月${result.lunar.day}日`,
+      `日干支：${result.day.name} · 建除：${result.jianChu.name}`,
+      `日支：${result.day.branch.name} · 冲支：${result.clash.clashBranch}`,
+      ...result.activities.map((activity) => `${activity.label}：${activity.status} · ${activity.message}`),
+    ],
+    evidenceRuleIds: result.evidence.map((item) => item.ruleId),
+  };
+}
+
+export function buildUnavailableConsultationSystem(
+  system: ConsultationFacts["systems"][number]["system"],
+  message: string,
+): ConsultationFacts["systems"][number] {
+  return { system, status: "unavailable", facts: [message], evidenceRuleIds: [] };
+}
+
+export function buildConsultationFacts(
+  route: RouteDecision,
+  systems: ConsultationFacts["systems"],
+): ConsultationFacts {
+  const unique = systems.filter((item, index, all) => all.findIndex((candidate) => candidate.system === item.system) === index);
+  return consultationFactsSchema.parse({ version: 1, route, systems: unique });
 }

@@ -5,17 +5,25 @@ import {
   consultWithModel,
   consultationModelResponseSchema,
   loadAppConfig,
+  routeQuestion,
   resolveApiKey,
 } from "@xuanshu/agent";
-import { claimSchema } from "@xuanshu/domain";
+import { calculateAlmanac, claimSchema, type EvidenceRef } from "@xuanshu/domain";
 import { revalidatePath } from "next/cache";
 import {
   appendStoredMessage,
+  buildAlmanacConsultationSystem,
   buildBaziConsultationFacts,
+  buildConsultationFacts,
+  buildLiuyaoConsultationSystem,
+  buildUnavailableConsultationSystem,
+  buildZiweiConsultationSystem,
   createStoredConsultation,
 } from "@/server/consult";
 import { createStoredBaziSnapshot } from "@/server/charts";
+import { listStoredLiuyaoCases } from "@/server/liuyao";
 import { listStoredProfiles } from "@/server/profiles";
+import { createStoredZiweiSnapshot } from "@/server/ziwei";
 
 export type ConsultActionState = {
   status: "idle" | "error" | "success";
@@ -41,12 +49,39 @@ function errorMessage(error: unknown) {
   return "咨询未完成，系统没有保存未经校验的模型回答。";
 }
 
+function todayInTimeZone(timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function addDays(date: string, days: number) {
+  const value = new Date(`${date}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function resolveAlmanacDate(question: string, requestedDate: string, timeZone: string) {
+  if (requestedDate) return requestedDate;
+  const today = todayInTimeZone(timeZone);
+  if (question.includes("后天")) return addDays(today, 2);
+  if (question.includes("明天")) return addDays(today, 1);
+  if (question.includes("今天")) return today;
+  return undefined;
+}
+
 export async function askConsultationAction(
   _previousState: ConsultActionState,
   formData: FormData,
 ): Promise<ConsultActionState> {
   const profileId = textField(formData, "profileId");
   const question = textField(formData, "question");
+  const requestedAlmanacDate = textField(formData, "almanacDate");
   if (!profileId || profileId.length > 128) {
     return { status: "error", message: "请先选择人物档案。" };
   }
@@ -57,8 +92,37 @@ export async function askConsultationAction(
   try {
     const profile = listStoredProfiles().find((item) => item.id === profileId);
     if (!profile) return { status: "error", message: "人物档案不存在，可能已经被删除。" };
+    const route = routeQuestion(question);
     const snapshot = createStoredBaziSnapshot(profile.id);
     if (!snapshot) return { status: "error", message: "当前档案还没有可验证的八字快照。" };
+
+    const baziFacts = buildBaziConsultationFacts(snapshot);
+    const systems = [baziFacts.systems[0]];
+    const profileTimeZone = profile.birthRecord.rawInput.location.timeZoneId;
+    const ziweiSnapshot = route.systems.includes("ziwei") ? createStoredZiweiSnapshot(profile.id) : undefined;
+    const liuyaoCase = route.systems.includes("liuyao") ? listStoredLiuyaoCases(profile.id)[0] : undefined;
+    const almanacDate = route.systems.includes("almanac")
+      ? resolveAlmanacDate(question, requestedAlmanacDate, profileTimeZone)
+      : undefined;
+    const almanacResult = almanacDate
+      ? calculateAlmanac({ schemaVersion: 1, solarDate: almanacDate, timeZoneId: profileTimeZone })
+      : undefined;
+    if (route.systems.includes("ziwei")) {
+      systems.push(ziweiSnapshot
+        ? buildZiweiConsultationSystem(ziweiSnapshot)
+        : buildUnavailableConsultationSystem("ziwei", "当前档案没有可用的紫微候选盘"));
+    }
+    if (route.systems.includes("liuyao")) {
+      systems.push(liuyaoCase
+        ? buildLiuyaoConsultationSystem(liuyaoCase)
+        : buildUnavailableConsultationSystem("liuyao", "当前档案没有已保存的六爻案例"));
+    }
+    if (route.systems.includes("almanac")) {
+      systems.push(almanacResult
+        ? buildAlmanacConsultationSystem(almanacResult)
+        : buildUnavailableConsultationSystem("almanac", "请在问题中写明今天/明天，或在表单中选择一个黄历日期"));
+    }
+    const facts = buildConsultationFacts(route, systems);
 
     const appConfig = await loadAppConfig();
     const apiKey = resolveApiKey(appConfig.config);
@@ -66,20 +130,32 @@ export async function askConsultationAction(
       config: appConfig.config,
       apiKey,
       question,
-      facts: buildBaziConsultationFacts(snapshot),
+      facts,
     }));
-    const evidenceByRuleId = new Map(snapshot.payload.chart.evidence.map((item) => [item.ruleId, item]));
+    const evidenceSources = new Map<string, EvidenceRef>();
+    const evidenceOwnerByRuleId = new Map<string, "bazi" | "ziwei" | "almanac" | "liuyao">();
+    const addEvidence = (items: EvidenceRef[], owner: "bazi" | "ziwei" | "almanac" | "liuyao") => {
+      for (const item of items) {
+        evidenceSources.set(item.ruleId, item);
+        evidenceOwnerByRuleId.set(item.ruleId, owner);
+      }
+    };
+    addEvidence(snapshot.payload.chart.evidence, "bazi");
+    addEvidence(ziweiSnapshot?.payload.chart.evidence ?? [], "ziwei");
+    addEvidence(liuyaoCase?.calculation.evidence ?? [], "liuyao");
+    addEvidence(almanacResult?.evidence ?? [], "almanac");
     const claims = response.claims.map((claim, index) => {
-      const evidence = claim.evidenceRuleIds.map((ruleId) => evidenceByRuleId.get(ruleId));
+      const evidence = claim.evidenceRuleIds.map((ruleId) => evidenceSources.get(ruleId));
       if (evidence.some((item) => !item)) {
         throw new ConsultationProviderError("模型引用了当前快照之外的规则", "schema");
       }
+      const claimSystem = claim.system ?? evidenceOwnerByRuleId.get(claim.evidenceRuleIds[0] ?? "") ?? (route.primarySystem === "synthesis" ? "synthesis" : route.primarySystem);
       return claimSchema.parse({
         id: `model-claim-${index + 1}`,
         text: claim.text,
-        system: "bazi",
+        system: claimSystem,
         certainty: claim.certainty,
-        evidence,
+        evidence: evidence as EvidenceRef[],
         appliesTo: claim.appliesTo,
         uncertainty: claim.uncertainty,
       });

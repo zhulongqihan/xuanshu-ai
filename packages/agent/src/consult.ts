@@ -1,11 +1,13 @@
 import { z } from "zod";
 import type { AppConfig } from "./config";
+import { routeDecisionSchema } from "./router";
 
 const MAX_QUESTION_LENGTH = 1_000;
 
 export const consultationFactsSchema = z
   .object({
     version: z.literal(1),
+    route: routeDecisionSchema.optional(),
     systems: z.array(
       z
         .object({
@@ -27,6 +29,7 @@ export const consultationModelResponseSchema = z
     claims: z.array(
       z
         .object({
+          system: z.enum(["bazi", "ziwei", "almanac", "liuyao", "synthesis"]).optional(),
           text: z.string().trim().min(1).max(2_000),
           certainty: z.enum(["deterministic", "rule_based", "interpretive", "ambiguous"]),
           evidenceRuleIds: z.array(z.string().trim().min(1)).min(1).max(8),
@@ -89,6 +92,10 @@ function schemaForProvider() {
           type: "object",
           additionalProperties: false,
           properties: {
+            system: {
+              type: "string",
+              enum: ["bazi", "ziwei", "almanac", "liuyao", "synthesis"],
+            },
             text: { type: "string", minLength: 1, maxLength: 2_000 },
             certainty: {
               type: "string",
@@ -121,6 +128,7 @@ function schemaForProvider() {
 }
 
 const SYSTEM_PROMPT = `你是玄枢 AI 的解释层。你只能解释用户提供的结构化事实，不能重新排盘、补算、猜测或捏造任何规则结果。
+先遵守 facts.route 中的 primarySystem、systems、mode 和 safety；status 为 unavailable 的系统不能被补写成已知事实。综合问题必须分别说明各术数的适用范围、共识与冲突，不能把一套术数的结论冒充另一套。
 输出必须严格符合给定 JSON Schema。每条 claim 至少引用一个 facts 中已有的 evidenceRuleIds；如果事实不足，明确写入 uncertainty 或 cautions，并说明需要补充什么。
 回答定位为传统文化研究、娱乐与自我反思参考，不得对医疗、法律、投资、死亡、犯罪或其他高风险事项作确定性结论，也不得用恐惧或绝对化表达诱导用户。
 不要复述出生日期、地点、时区等原始个人信息；只使用 facts 中已脱敏的结果。`;

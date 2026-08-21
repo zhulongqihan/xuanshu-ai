@@ -20,6 +20,8 @@ export function ConsultForm({ profileId }: { profileId: string }) {
   return (
     <form className="consult-form" action={formAction}>
       <input type="hidden" name="profileId" value={profileId} />
+      <label htmlFor="consult-almanac-date">黄历日期（择日问题可选）</label>
+      <input id="consult-almanac-date" name="almanacDate" type="date" disabled={pending} />
       <label htmlFor="consult-question">想问什么？</label>
       <textarea
         id="consult-question"
@@ -32,7 +34,7 @@ export function ConsultForm({ profileId }: { profileId: string }) {
         disabled={pending}
       />
       <div className="consult-form-footer">
-        <p>模型只接收当前快照的脱敏事实，不接收原始出生资料；回答必须引用当前证据。</p>
+        <p>模型只接收路由后所需的脱敏事实，不接收原始出生资料；回答必须引用当前证据。</p>
         <button className="primary-button button-with-icon" type="submit" disabled={pending}>
           {pending ? <LoaderCircle className="button-spinner" aria-hidden="true" size={16} /> : <Send aria-hidden="true" size={16} />}
           {pending ? "正在解释" : "开始咨询"}
